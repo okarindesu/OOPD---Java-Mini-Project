@@ -1,5 +1,9 @@
 package engine;
 
+import entities.Level;
+import entities.LevelLoader;
+import physics.CollisionHandler;
+import physics.CollisionResolver;
 import physics.GameRenderer;
 import physics.PhysicsSystem;
 import utils.Vector2D;
@@ -17,14 +21,17 @@ public class GameLoop extends Canvas implements Runnable {
     private Robot robot ;
     private PhysicsSystem physicsSystem ;
     private GameRenderer gameRenderer ;
-    private Canvas canvas ;
+    private CollisionHandler collisionHandler ;
+    private CollisionResolver collisionResolver ;
+    private String filePath ;
+    private Level level ;
 
     public static final int WIDTH = 1280 ;
     public static final int HEIGHT = 720 ;
 
 
     public GameLoop() {
-        initPos = new Vector2D(100 , 100) ;
+        initPos = new Vector2D(100 , 0) ;
         robot = new Robot(initPos) ;
 
         inputHandler = new InputHandler() ;
@@ -35,6 +42,12 @@ public class GameLoop extends Canvas implements Runnable {
         physicsSystem = new PhysicsSystem() ;
         gameRenderer = new GameRenderer(this , WIDTH , HEIGHT) ;
         setPreferredSize(new Dimension(WIDTH , HEIGHT)) ;
+
+        collisionHandler = new CollisionHandler() ;
+        collisionResolver = new CollisionResolver() ;
+
+        filePath = "resources/levels/Basic_Platforms.wrl" ;
+        level = LevelLoader.loadlevel(filePath) ;
     }
 
     public synchronized void start() {
@@ -72,17 +85,18 @@ public class GameLoop extends Canvas implements Runnable {
         double delta = 0 ;
 
         while(running) {
-            playerController.control();
+            playerController.control() ;
+            collisionHandler.handleCollisions(collisionResolver , level , robot) ;
 
             long now = System.nanoTime() ;
             delta += (now - lastTime) / nsPerUpdate ;
             lastTime = now ;
 
             while(delta >= 1) {
-                physicsSystem.update(robot) ;
+                physicsSystem.update(robot , level) ;
                 delta-- ;
             }
-            gameRenderer.render(robot) ;
+            gameRenderer.render(robot , level) ;
         }
         stop() ;
     }
