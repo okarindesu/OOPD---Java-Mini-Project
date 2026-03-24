@@ -4,11 +4,24 @@ import entities.Level;
 import entities.Robot;
 import entities.Tile;
 import utils.Vector2D;
+import java.util.List;
 
 public class CollisionHandler {
-    public void handleCollisions(CollisionResolver collisionResolver , Level level , Robot robot) {
+    public void handleCollisions(CollisionResolver collisionResolver , Level level , List<Robot> robots) {
         handleLeveltoLevelCollisions(collisionResolver , level) ;
-        robotLevelCollision(collisionResolver , robot , level) ;
+        
+        for (Robot robot : robots) {
+            robotLevelCollision(collisionResolver , robot , level) ;
+        }
+        
+        // Handle robot-to-robot collisions
+        if (robots.size() >= 2) {
+            for (int i = 0; i < robots.size(); i++) {
+                for (int j = i + 1; j < robots.size(); j++) {
+                    robotRobotCollision(collisionResolver, robots.get(i), robots.get(j));
+                }
+            }
+        }
     }
 
     public void robotLevelCollision(CollisionResolver collisionResolver ,Robot robot , Level level) {
@@ -16,6 +29,25 @@ public class CollisionHandler {
         for(int i = 0 ; i < levelSize ; i++) {
             Tile tile = level.findTile(i) ;
             robotTileCollision(collisionResolver , robot , tile) ;
+        }
+    }
+
+    private void robotRobotCollision(CollisionResolver collisionResolver, Robot robot1, Robot robot2) {
+        float x1 = robot1.getPosition().getVector2DX();
+        float y1 = robot1.getPosition().getVector2DY();
+        float w1 = robot1.getRoboWidth();
+        float h1 = robot1.getRoboHeight();
+
+        float x2 = robot2.getPosition().getVector2DX();
+        float y2 = robot2.getPosition().getVector2DY();
+        float w2 = robot2.getRoboWidth();
+        float h2 = robot2.getRoboHeight();
+
+        boolean overlapX = x1 < x2 + w2 && x1 + w1 > x2;
+        boolean overlapY = y1 < y2 + h2 && y1 + h1 > y2;
+
+        if (overlapX && overlapY) {
+            collisionResolver.resolveRobotRobotCollisions(robot1, robot2);
         }
     }
 
