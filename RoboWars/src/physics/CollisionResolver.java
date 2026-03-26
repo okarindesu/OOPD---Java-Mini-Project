@@ -88,4 +88,76 @@ public class CollisionResolver {
             }
         }
     }
+
+    public void resolveRobotRobotCollisions(Robot robot1 , Robot robot2) {
+        float x1 = robot1.getPosition().getVector2DX();
+        float y1 = robot1.getPosition().getVector2DY();
+        float w1 = robot1.getRoboWidth();
+        float h1 = robot1.getRoboHeight();
+
+        float x2 = robot2.getPosition().getVector2DX();
+        float y2 = robot2.getPosition().getVector2DY();
+        float w2 = robot2.getRoboWidth();
+        float h2 = robot2.getRoboHeight();
+
+        float overlapX = Math.min(x1 + w1, x2 + w2) - Math.max(x1, x2);
+        float overlapY = Math.min(y1 + h1, y2 + h2) - Math.max(y1, y2);
+
+        if (overlapX <= 0 || overlapY <= 0) return;
+
+        Vector2D pos1 = robot1.getPosition();
+        Vector2D pos2 = robot2.getPosition();
+        Vector2D vel1 = robot1.getVelocity();
+        Vector2D vel2 = robot2.getVelocity();
+
+        float epsilon = 0.5f;
+
+        if (overlapX < overlapY) {
+            // Separate horizontally
+            float separation = (overlapX + epsilon) / 2.0f;
+            if (x1 < x2) {
+                pos1.addLocal(new Vector2D(-separation, 0));
+                pos2.addLocal(new Vector2D(separation, 0));
+            } else {
+                pos1.addLocal(new Vector2D(separation, 0));
+                pos2.addLocal(new Vector2D(-separation, 0));
+            }
+            // Bounce horizontally
+            vel1.set(-vel1.getVector2DX() * 0.5f, vel1.getVector2DY());
+            vel2.set(-vel2.getVector2DX() * 0.5f, vel2.getVector2DY());
+        } else {
+            // Separate vertically
+            float separation = (overlapY + epsilon) / 2.0f;
+            if (y1 < y2) {
+                pos1.addLocal(new Vector2D(0, -separation));
+                pos2.addLocal(new Vector2D(0, separation));
+            } else {
+                pos1.addLocal(new Vector2D(0, separation));
+                pos2.addLocal(new Vector2D(0, -separation));
+            }
+            // Bounce vertically
+            vel1.set(vel1.getVector2DX(), -vel1.getVector2DY() * 0.5f);
+            vel2.set(vel2.getVector2DX(), -vel2.getVector2DY() * 0.5f);
+        }
+    }
+
+    public void resolveRobotBoundaryCollisions(Robot robot , int screenWidth , int screenHeight) {
+        Vector2D pos = robot.getPosition();
+        float x = pos.getVector2DX();
+        float y = pos.getVector2DY();
+        float w = robot.getRoboWidth();
+
+        if (x < 0) {
+            pos.set(0, y);
+            robot.getVelocity().set(0, robot.getVelocity().getVector2DY());
+        }
+        if (x + w > screenWidth) {
+            pos.set(screenWidth - w, y);
+            robot.getVelocity().set(0, robot.getVelocity().getVector2DY());
+        }
+
+        if (y > screenHeight) {
+            robot.respawn();
+        }
+    }
 }

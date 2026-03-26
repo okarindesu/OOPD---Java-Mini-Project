@@ -7,6 +7,7 @@ import utils.Vector2D;
 
 import java.awt.*;
 import java.awt.image.BufferStrategy;
+import java.util.List;
 
 public class GameRenderer {
     private Canvas canvas ;
@@ -19,7 +20,7 @@ public class GameRenderer {
         this.height = height ;
     }
 
-    public void render(Robot robot , Level level) {
+    public void render(Robot robot1 , Robot robot2 , Level level) {
         BufferStrategy bs = canvas.getBufferStrategy() ;
         if (bs == null) return ;
 
@@ -28,7 +29,9 @@ public class GameRenderer {
         g.fillRect(0 , 0 , width , height) ;
 
         drawLevel(g , level) ;
-        drawRobot(g , robot) ;
+        drawRobot(g , robot1 , Color.RED) ;
+        drawRobot(g , robot2 , Color.CYAN) ;
+        drawUI(g , robot1 , robot2) ;
 
         g.setColor(Color.WHITE) ;
         g.drawString("RoboWars" , 10 , 20) ;
@@ -37,8 +40,9 @@ public class GameRenderer {
         bs.show() ;
     }
 
-    private void drawRobot(Graphics g , Robot robot) {
-        g.setColor(Color.RED) ;
+    private void drawRobot(Graphics g , Robot robot , Color color) {
+        if(robot.gameOverforRobo) return ;
+        g.setColor(color) ;
         Vector2D vec = robot.getPosition() ;
         float roboWidth = robot.getRoboWidth() ;
         float roboHeight = robot.getRoboHeight() ;
@@ -51,6 +55,17 @@ public class GameRenderer {
     }
 
     private void drawLevel(Graphics g , Level level) {
+        if(level.getBackground() != null) {
+            g.drawImage(
+                    level.getBackground(),
+                    0,
+                    0,
+                    width,   // screen width
+                    height,  // screen height
+                    null
+            );
+        }
+
         g.setColor(Color.BLUE) ;
         int levelSize = level.getLevelSize() ;
         for(int i = 0 ; i < levelSize ; i++) {
@@ -61,13 +76,61 @@ public class GameRenderer {
                 float tileWidth = tile.getTileWidth() ;
                 float tileHeight = tile.getTileHeight() ;
 
-                g.fillRect(
-                        (int) tileX ,
-                        (int) tileY ,
-                        (int) tileWidth ,
-                        (int) tileHeight
+                g.drawImage(
+                        tile.getTexture(),
+                        (int) tileX,
+                        (int) tileY,
+                        (int) tileWidth,
+                        (int) tileHeight,
+                        null
                 );
             }
         }
+    }
+
+    private void drawUI(Graphics g, Robot robot1 , Robot robot2) {
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.BOLD, 16));
+
+        // Title
+        g.drawString("RoboWars - 2 Player", 10, 20);
+        g.setFont(new Font("Arial", Font.PLAIN, 12));
+        g.drawString("P1: WASD + Q | P2: Arrows + Space", 10, 35);
+
+        // Player 1 Stats
+        g.setColor(Color.RED);
+        g.setFont(new Font("Arial", Font.BOLD, 14));
+        g.drawString("P1", 10, 60);
+        g.setFont(new Font("Arial", Font.PLAIN, 12));
+        g.drawString("Health: " + String.format("%.0f", robot1.getHealth()) + "/" + (int)Robot.getMaxHealth(), 10, 75);
+        g.drawString("Lives: " + robot1.getLives(), 10, 90);
+
+        // Health bar for P1
+        drawHealthBar(g, 10, 100, 150, 15, robot1.getHealth(), Robot.getMaxHealth(), Color.RED);
+
+        // Player 2 Stats
+        g.setColor(Color.CYAN);
+        g.setFont(new Font("Arial", Font.BOLD, 14));
+        g.drawString("P2", width - 50, 60);
+        g.setFont(new Font("Arial", Font.PLAIN, 12));
+        g.drawString("Health: " + String.format("%.0f", robot2.getHealth()) + "/" + (int)Robot.getMaxHealth(), width - 180, 75);
+        g.drawString("Lives: " + robot2.getLives(), width - 180, 90);
+
+        // Health bar for P2
+        drawHealthBar(g, width - 160, 100, 150, 15, robot2.getHealth(), Robot.getMaxHealth(), Color.CYAN);
+    }
+
+    private void drawHealthBar(Graphics g, int x, int y, int width, int height, float currentHealth, float maxHealth, Color color) {
+        g.setColor(Color.GRAY);
+        g.fillRect(x, y, width, height);
+
+        float percentage = currentHealth / maxHealth;
+        int filledWidth = (int) (width * percentage);
+
+        g.setColor(color);
+        g.fillRect(x, y, filledWidth, height);
+
+        g.setColor(Color.WHITE);
+        g.drawRect(x, y, width, height);
     }
 }

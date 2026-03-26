@@ -6,9 +6,12 @@ import entities.Tile;
 import utils.Vector2D;
 
 public class CollisionHandler {
-    public void handleCollisions(CollisionResolver collisionResolver , Level level , Robot robot) {
+    public void handleCollisions(CollisionResolver collisionResolver , Level level , Robot robot1 , Robot robot2 , int screenWidth , int screenHeight) {
         handleLeveltoLevelCollisions(collisionResolver , level) ;
-        robotLevelCollision(collisionResolver , robot , level) ;
+        robotLevelCollision(collisionResolver , robot1 , level) ;
+        robotLevelCollision(collisionResolver , robot2 , level) ;
+        robottoRobotCollisions(collisionResolver , robot1 , robot2) ;
+        robotBoundaryCollisions(collisionResolver , robot1 , robot2 , screenWidth , screenHeight) ;
     }
 
     public void robotLevelCollision(CollisionResolver collisionResolver ,Robot robot , Level level) {
@@ -70,5 +73,27 @@ public class CollisionHandler {
         boolean overlapY = y1 < y2 + h2 && y1 + h1 > y2;
 
         if(overlapX && overlapY) collisionResolver.resolveRobotTileCollisions(robot , tile) ;
+    }
+
+    private void robottoRobotCollisions(CollisionResolver collisionResolver , Robot robot1 , Robot robot2) {
+        float x1 = robot1.getPosition().getVector2DX() ;
+        float y1 = robot1.getVelocity().getVector2DY() ;
+        float w1 = robot1.getRoboWidth() ;
+        float h1 = robot1.getRoboHeight() ;
+
+        float x2 = robot2.getPosition().getVector2DX() ;
+        float y2 = robot2.getVelocity().getVector2DY() ;
+        float w2 = robot2.getRoboWidth() ;
+        float h2 = robot2.getRoboHeight() ;
+
+        boolean overlapX = x1 < x2 + w2 && x1 + w1 > x2;
+        boolean overlapY = y1 < y2 + h2 && y1 + h1 > y2;
+
+        if(overlapX && overlapY) collisionResolver.resolveRobotRobotCollisions(robot1 , robot2) ;
+    }
+
+    private void robotBoundaryCollisions(CollisionResolver collisionResolver , Robot robot1 , Robot robot2 , int screenWidth , int screenHeight) {
+        collisionResolver.resolveRobotBoundaryCollisions(robot1 , screenWidth , screenHeight) ;
+        collisionResolver.resolveRobotBoundaryCollisions(robot2 , screenWidth , screenHeight) ;
     }
 }

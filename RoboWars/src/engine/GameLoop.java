@@ -2,6 +2,7 @@ package engine;
 
 import entities.Level;
 import entities.LevelLoader;
+import entities.RobotSystem;
 import physics.CollisionHandler;
 import physics.CollisionResolver;
 import physics.GameRenderer;
@@ -14,11 +15,14 @@ import entities.Robot;
 public class GameLoop extends Canvas implements Runnable {
     private Thread thread ;
     private boolean running = false ;
-    private Vector2D initPos ;
+    private Vector2D initPos1 ;
+    private Vector2D initPos2 ;
 
     private PlayerController playerController ;
     private InputHandler inputHandler ;
-    private Robot robot ;
+    private Robot robot1 ;
+    private Robot robot2 ;
+    private RobotSystem robotSystem ;
     private PhysicsSystem physicsSystem ;
     private GameRenderer gameRenderer ;
     private CollisionHandler collisionHandler ;
@@ -31,14 +35,19 @@ public class GameLoop extends Canvas implements Runnable {
 
 
     public GameLoop() {
-        initPos = new Vector2D(100 , 0) ;
-        robot = new Robot(initPos) ;
+        initPos1 = new Vector2D(100 , 0) ;
+        robot1 = new Robot(initPos1) ;
+
+        initPos2 = new Vector2D(400 , 0) ;
+        robot2 = new Robot(initPos2) ;
+
+        robotSystem = new RobotSystem(robot1 , robot2) ;
 
         inputHandler = new InputHandler() ;
         addKeyListener(inputHandler) ;
         setFocusable(true) ;
 
-        playerController = new PlayerController(robot , inputHandler) ;
+        playerController = new PlayerController(robot1 , robot2 , inputHandler) ;
         physicsSystem = new PhysicsSystem() ;
         gameRenderer = new GameRenderer(this , WIDTH , HEIGHT) ;
         setPreferredSize(new Dimension(WIDTH , HEIGHT)) ;
@@ -46,7 +55,7 @@ public class GameLoop extends Canvas implements Runnable {
         collisionHandler = new CollisionHandler() ;
         collisionResolver = new CollisionResolver() ;
 
-        filePath = "resources/levels/Basic_Platforms.wrl" ;
+        filePath = "resources/levels/Vertical_Movement.wrl" ;
         level = LevelLoader.loadlevel(filePath) ;
     }
 
@@ -86,17 +95,21 @@ public class GameLoop extends Canvas implements Runnable {
 
         while(running) {
             playerController.control() ;
-            collisionHandler.handleCollisions(collisionResolver , level , robot) ;
+            collisionHandler.handleCollisions(collisionResolver , level , robot1 , robot2 , WIDTH , HEIGHT) ;
+
+            robotSystem.checkAttacksRobots();
+            robotSystem.checkRespawns();
+            robotSystem.checkWinCondition();
 
             long now = System.nanoTime() ;
             delta += (now - lastTime) / nsPerUpdate ;
             lastTime = now ;
 
             while(delta >= 1) {
-                physicsSystem.update(robot , level) ;
+                physicsSystem.update(robot1 , robot2 , level) ;
                 delta-- ;
             }
-            gameRenderer.render(robot , level) ;
+            gameRenderer.render(robot1 , robot2 , level) ;
         }
         stop() ;
     }

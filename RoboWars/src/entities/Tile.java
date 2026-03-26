@@ -2,9 +2,12 @@ package entities;
 
 import utils.Vector2D;
 
+import java.awt.image.BufferedImage;
+
 import static java.lang.Math.abs;
 
 public class Tile {
+    private BufferedImage texture ;
     private final Vector2D initPosition ;
     private Vector2D position ;
     private float tileWidth ;
@@ -16,7 +19,7 @@ public class Tile {
 
     public float restitution = 0.2f ;
 
-    public Tile(Vector2D position , float tileWidth , float tileHeight) {
+    public Tile(Vector2D position , float tileWidth , float tileHeight , String texturePath) {
         this.initPosition = new Vector2D(position.getVector2DX(), position.getVector2DY());
         this.position = new Vector2D(position.getVector2DX(), position.getVector2DY());
         this.tileWidth = tileWidth ;
@@ -25,9 +28,10 @@ public class Tile {
         this.isMoving = false ;
         this.tileVel = new Vector2D(0.0f , 0.0f) ;
         this.amplitude = new Vector2D(0,0) ;
+        this.texture = TextureManager.getTexture(texturePath) ;
     }
 
-    public Tile(Vector2D position , float tileWidth , float tileHeight , Vector2D amplitude , Vector2D tileVel) {
+    public Tile(Vector2D position , float tileWidth , float tileHeight , Vector2D amplitude , Vector2D tileVel , String texturePath) {
         this.initPosition = new Vector2D(position.getVector2DX(), position.getVector2DY());
         this.position = new Vector2D(position.getVector2DX(), position.getVector2DY());
         this.tileWidth = tileWidth ;
@@ -37,6 +41,8 @@ public class Tile {
         this.tileVel = tileVel ;
         if(tileVel.getVector2DX() == 0.0f && tileVel.getVector2DY() == 0.0f) this.isMoving = false ;
         else this.isMoving = true ;
+
+        this.texture = TextureManager.getTexture(texturePath) ;
     }
 
     public void changeVelocity() {
@@ -71,4 +77,6 @@ public class Tile {
 
     public boolean getIsMoving() { return this.isMoving ; }
     public void setIsMoving(boolean isMoving) { this.isMoving = isMoving ; }
+
+    public BufferedImage getTexture() { return this.texture ; }
 }
