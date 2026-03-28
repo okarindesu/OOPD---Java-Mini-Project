@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="3dad7394-3aa9-41d7-9f54-e5bca040660c" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RoboWars/resources/levels/Basic_Platforms.wrl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RoboWars/resources/levels/Chaotic.wrl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RoboWars/resources/levels/Mixed_Movement.wrl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RoboWars/resources/levels/Platform_Chaining.wrl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RoboWars/resources/levels/Vertical_Movement.wrl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RoboWars/src/entities/Level.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RoboWars/src/entities/LevelLoader.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RoboWars/src/entities/Tile.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RoboWars/src/physics/CollisionHandler.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RoboWars/src/physics/CollisionResolver.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/RoboWars/out/production/RoboWars/engine/GameLoop.class" beforeDir="false" afterPath="$PROJECT_DIR$/RoboWars/out/production/RoboWars/engine/GameLoop.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/RoboWars/out/production/RoboWars/engine/PlayerController.class" beforeDir="false" afterPath="$PROJECT_DIR$/RoboWars/out/production/RoboWars/engine/PlayerController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/RoboWars/out/production/RoboWars/entities/Robot.class" beforeDir="false" afterPath="$PROJECT_DIR$/RoboWars/out/production/RoboWars/entities/Robot.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/RoboWars/out/production/RoboWars/physics/GameRenderer.class" beforeDir="false" afterPath="$PROJECT_DIR$/RoboWars/out/production/RoboWars/physics/GameRenderer.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/RoboWars/out/production/RoboWars/physics/PhysicsSystem.class" beforeDir="false" afterPath="$PROJECT_DIR$/RoboWars/out/production/RoboWars/physics/PhysicsSystem.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/RoboWars/src/engine/GameLoop.java" beforeDir="false" afterPath="$PROJECT_DIR$/RoboWars/src/engine/GameLoop.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/RoboWars/src/engine/PlayerController.java" beforeDir="false" afterPath="$PROJECT_DIR$/RoboWars/src/engine/PlayerController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/RoboWars/src/entities/Robot.java" beforeDir="false" afterPath="$PROJECT_DIR$/RoboWars/src/entities/Robot.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/RoboWars/src/main/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/RoboWars/src/main/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/RoboWars/src/physics/GameRenderer.java" beforeDir="false" afterPath="$PROJECT_DIR$/RoboWars/src/physics/GameRenderer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/RoboWars/src/physics/PhysicsSystem.java" beforeDir="false" afterPath="$PROJECT_DIR$/RoboWars/src/physics/PhysicsSystem.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SmashBros_MiniProject.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/SmashBros_MiniProject/GamePanel.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/SmashBros_MiniProject/KeyHandler.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/SmashBros_MiniProject/Main.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/SmashBros_MiniProject/Player.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GamePanel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/KeyHandler.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Player.java" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="main" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;drak-oss&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/okarindesu/OOPD---Java-Mini-Project.git&quot;,
+    &quot;accountId&quot;: &quot;0772e0fa-62be-478a-89e4-d5889c12140f&quot;
+  }
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 3
+}</component>
+  <component name="ProjectId" id="3B9p2GqjZkRacmU4aOMq2A3KZDX" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.Main.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "heramb-branch",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/Devendra Agashe/Downloads/OOPD---Java-Mini-Project",
+    "settings.editor.selected.configurable": "com.poratu.idea.plugins.tomcat.setting.TomcatServersConfigurable"
+  }
+}]]></component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-30f59d01ecdd-2fc7cc6b9a17-intellij.indexing.shared.core-IU-253.30387.90" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="3dad7394-3aa9-41d7-9f54-e5bca040660c" name="Changes" comment="" />
+      <created>1773910931735</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1773910931735</updated>
+    </task>
+    <servers />
+  </component>
+</project>
