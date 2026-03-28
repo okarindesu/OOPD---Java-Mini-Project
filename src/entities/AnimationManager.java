@@ -51,6 +51,9 @@ public class AnimationManager {
             if (currentState != null && animations.containsKey(currentState)) {
                 ArrayList<BufferedImage> frames = animations.get(currentState);
                 
+                // Prevent division by zero if no frames loaded
+                if (frames.isEmpty()) return;
+                
                 // For attack animations, don't loop - stop at last frame
                 if (currentState.startsWith("attack_")) {
                     if (currentFrame < frames.size() - 1) {

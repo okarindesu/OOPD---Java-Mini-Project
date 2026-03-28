@@ -292,6 +292,27 @@ public class GameLoop extends Canvas implements Runnable {
         double delta = 0 ;
 
         while(running) {
+            // If there's a winner, handle game over state
+            if (robotSystem.getWinner() != null) {
+                // Handle restart on 'R' press
+                if (inputHandler.isKeyPressed(KeyEvent.VK_R) && !restartHandled) {
+                    restartGame();
+                    restartHandled = true;
+                }
+                if (!inputHandler.isKeyPressed(KeyEvent.VK_R)) {
+                    restartHandled = false;
+                }
+                
+                // Handle exit on 'E' press
+                if (inputHandler.isKeyPressed(KeyEvent.VK_E)) {
+                    System.exit(0);
+                }
+                
+                // Continue to render the winner screen
+                gameRenderer.render(robot1 , robot2 , level , camera, robotSystem.getWinner(), projectileSystem) ;
+                continue;
+            }
+
             playerController.control() ;
             
             // Update animations
@@ -300,21 +321,9 @@ public class GameLoop extends Canvas implements Runnable {
             
             collisionHandler.handleCollisions(collisionResolver, level, robot1, robot2, projectileSystem, WIDTH, HEIGHT);
 
-            robotSystem.checkAttacksRobots();
             robotSystem.checkRespawns();
             robotSystem.checkWinCondition();
-
-            // restart logic
-            if (robotSystem.getWinner() != null) {
-                if (inputHandler.isKeyPressed(KeyEvent.VK_R) && !restartHandled) {
-                    restartGame();
-                    restartHandled = true;
-                }
-
-                if (!inputHandler.isKeyPressed(KeyEvent.VK_R)) {
-                    restartHandled = false;
-                }
-            }
+            robotSystem.checkAttacksRobots();
 
             long now = System.nanoTime() ;
             delta += (now - lastTime) / nsPerUpdate ;

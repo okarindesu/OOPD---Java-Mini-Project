@@ -44,16 +44,69 @@ public class GameRenderer {
         g.drawString("RoboWars" , 10 , 20) ;
 
         if (winner != null) {
-            g.setFont(new Font("Arial", Font.BOLD, 50));
+            // Create pixelated font effect
+            Font pixelFont = new Font("Monospaced", Font.BOLD, 48);
+            g.setFont(pixelFont);
             g.setColor(Color.YELLOW);
 
             FontMetrics fm = g.getFontMetrics();
             int textWidth = fm.stringWidth(winner);
 
             int x = (width - textWidth) / 2;
-            int y = height / 2;
+            int y = height / 2 - 50;
 
+            // Draw winner text with shadow for better visibility
+            g.setColor(Color.BLACK);
+            g.drawString(winner, x + 2, y + 2);
+            g.setColor(Color.YELLOW);
             g.drawString(winner, x, y);
+
+            // Draw instructions in cute boxes
+            g.setFont(new Font("Monospaced", Font.BOLD, 20));
+            FontMetrics fm2 = g.getFontMetrics();
+            
+            String replayText = "Press R to Replay";
+            String exitText = "Press E to Exit";
+            
+            int replayWidth = fm2.stringWidth(replayText);
+            int exitWidth = fm2.stringWidth(exitText);
+            
+            int boxHeight = 40;
+            int boxPadding = 20;
+            
+            // Replay box
+            int replayBoxWidth = replayWidth + boxPadding * 2;
+            int replayX = (width - replayBoxWidth) / 2;
+            int replayY = y + 40;
+            
+            // Draw replay box with rounded corners and gradient
+            g.setColor(new Color(100, 200, 100)); // Light green
+            g.fillRoundRect(replayX, replayY, replayBoxWidth, boxHeight, 15, 15);
+            g.setColor(new Color(50, 150, 50)); // Darker green border
+            g.drawRoundRect(replayX, replayY, replayBoxWidth, boxHeight, 15, 15);
+            
+            // Replay text
+            g.setColor(Color.WHITE);
+            int replayTextX = replayX + (replayBoxWidth - replayWidth) / 2;
+            int replayTextY = replayY + (boxHeight + fm2.getAscent() - fm2.getDescent()) / 2;
+            g.drawString(replayText, replayTextX, replayTextY);
+            
+            // Exit box
+            int exitBoxWidth = exitWidth + boxPadding * 2;
+            int exitX = (width - exitBoxWidth) / 2;
+            int exitY = y + 90;
+            
+            // Draw exit box with rounded corners and gradient
+            g.setColor(new Color(200, 100, 100)); // Light red
+            g.fillRoundRect(exitX, exitY, exitBoxWidth, boxHeight, 15, 15);
+            g.setColor(new Color(150, 50, 50)); // Darker red border
+            g.drawRoundRect(exitX, exitY, exitBoxWidth, boxHeight, 15, 15);
+            
+            // Exit text
+            g.setColor(Color.WHITE);
+            int exitTextX = exitX + (exitBoxWidth - exitWidth) / 2;
+            int exitTextY = exitY + (boxHeight + fm2.getAscent() - fm2.getDescent()) / 2;
+            g.drawString(exitText, exitTextX, exitTextY);
         }
 
         for (Projectile p : ps.getProjectiles()) {
