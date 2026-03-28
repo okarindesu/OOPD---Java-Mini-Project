@@ -11,7 +11,7 @@ import java.util.ArrayList;
 public class LevelLoader {
     public static Level loadlevel(String filePath) {
         ArrayList<Tile> tiles = new ArrayList<>() ;
-        BufferedImage background = null ;
+        ArrayList<ParallaxObject> parallaxObjects = new ArrayList<>() ;
 
         System.out.println("Loading level from: " + filePath);
         try(BufferedReader br = new BufferedReader(new FileReader(filePath))) {
@@ -22,9 +22,15 @@ public class LevelLoader {
                 String[] parts = line.split(" ");
                 String type = parts[0];
 
-                if (type.equals("BACKGROUND")) {
-                    String path = parts[1];
-                    background = TextureManager.getTexture(path);
+                if (type.equals("PARALLAX")) {
+                    float x = Float.parseFloat(parts[1]);
+                    float y = Float.parseFloat(parts[2]);
+                    float depth = Float.parseFloat(parts[3]);
+                    String path = parts[4];
+
+                    BufferedImage img = TextureManager.getTexture(path);
+
+                    parallaxObjects.add(new ParallaxObject(img, new Vector2D(x, y), depth));
                 }
 
                 else if (type.equals("STATIC")) {
@@ -76,6 +82,6 @@ public class LevelLoader {
         } catch(IOException e) {
             e.printStackTrace(); ;
         }
-        return new Level(tiles , background) ;
+        return new Level(tiles , parallaxObjects) ;
     }
 }

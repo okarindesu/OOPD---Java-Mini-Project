@@ -1,5 +1,6 @@
 package physics;
 
+import entities.Camera;
 import entities.Level;
 import entities.Robot;
 import entities.Tile;

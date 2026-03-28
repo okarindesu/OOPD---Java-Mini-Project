@@ -1,8 +1,7 @@
 package engine;
 
-import entities.Level;
-import entities.LevelLoader;
-import entities.RobotSystem;
+import entities.*;
+import entities.Robot;
 import physics.CollisionHandler;
 import physics.CollisionResolver;
 import physics.GameRenderer;
@@ -10,7 +9,6 @@ import physics.PhysicsSystem;
 import utils.Vector2D;
 
 import java.awt.*;
-import entities.Robot;
 
 public class GameLoop extends Canvas implements Runnable {
     private Thread thread ;
@@ -29,6 +27,7 @@ public class GameLoop extends Canvas implements Runnable {
     private CollisionResolver collisionResolver ;
     private String filePath ;
     private Level level ;
+    private Camera camera ;
 
     public static final int WIDTH = 1280 ;
     public static final int HEIGHT = 720 ;
@@ -46,6 +45,8 @@ public class GameLoop extends Canvas implements Runnable {
         inputHandler = new InputHandler() ;
         addKeyListener(inputHandler) ;
         setFocusable(true) ;
+
+        camera = new Camera(0 , 0) ;
 
         playerController = new PlayerController(robot1 , robot2 , inputHandler) ;
         physicsSystem = new PhysicsSystem() ;
@@ -109,7 +110,7 @@ public class GameLoop extends Canvas implements Runnable {
                 physicsSystem.update(robot1 , robot2 , level) ;
                 delta-- ;
             }
-            gameRenderer.render(robot1 , robot2 , level) ;
+            gameRenderer.render(robot1 , robot2 , level , camera) ;
         }
         stop() ;
     }

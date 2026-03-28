@@ -1,13 +1,12 @@
 package physics;
 
-import entities.Level;
+import entities.*;
 import entities.Robot;
-import entities.Tile;
 import utils.Vector2D;
 
 import java.awt.*;
 import java.awt.image.BufferStrategy;
-import java.util.List;
+import java.awt.image.BufferedImage;
 
 public class GameRenderer {
     private Canvas canvas ;
@@ -20,15 +19,18 @@ public class GameRenderer {
         this.height = height ;
     }
 
-    public void render(Robot robot1 , Robot robot2 , Level level) {
+    public void render(Robot robot1 , Robot robot2 , Level level , Camera camera) {
         BufferStrategy bs = canvas.getBufferStrategy() ;
         if (bs == null) return ;
+
+        camera.setCameraX(robot1.getPosition().getVector2DX() - width / 2) ;
+        camera.setCameraY(robot1.getPosition().getVector2DY() - height / 2) ;
 
         Graphics g = bs.getDrawGraphics() ;
         g.setColor(Color.BLACK) ;
         g.fillRect(0 , 0 , width , height) ;
 
-        drawLevel(g , level) ;
+        drawLevel(g , level , camera) ;
         drawRobot(g , robot1 , Color.RED) ;
         drawRobot(g , robot2 , Color.CYAN) ;
         drawUI(g , robot1 , robot2) ;
@@ -54,37 +56,14 @@ public class GameRenderer {
         );
     }
 
-    private void drawLevel(Graphics g , Level level) {
-        if(level.getBackground() != null) {
-            g.drawImage(
-                    level.getBackground(),
-                    0,
-                    0,
-                    width,   // screen width
-                    height,  // screen height
-                    null
-            );
-        }
+    private void drawLevel(Graphics g , Level level , Camera camera) {
+        drawBackground(g , level , camera) ;
 
         g.setColor(Color.BLUE) ;
         int levelSize = level.getLevelSize() ;
         for(int i = 0 ; i < levelSize ; i++) {
             Tile tile = level.findTile(i) ;
-            if(tile != null) {
-                float tileX = tile.getPosition().getVector2DX() ;
-                float tileY = tile.getPosition().getVector2DY() ;
-                float tileWidth = tile.getTileWidth() ;
-                float tileHeight = tile.getTileHeight() ;
-
-                g.drawImage(
-                        tile.getTexture(),
-                        (int) tileX,
-                        (int) tileY,
-                        (int) tileWidth,
-                        (int) tileHeight,
-                        null
-                );
-            }
+            if(tile != null) drawTile(g , tile) ;
         }
     }
 
@@ -132,5 +111,59 @@ public class GameRenderer {
 
         g.setColor(Color.WHITE);
         g.drawRect(x, y, width, height);
+    }
+
+    private void drawBackground(Graphics g , Level level , Camera camera) {
+        float scale = 5.0f ;
+        for(ParallaxObject obj : level.getParallaxObjects()) {
+            float depth = obj.getDepth() ;
+
+            float drawX = obj.getPosition().getVector2DX() - camera.getCameraX() * depth ;
+            float drawY = obj.getPosition().getVector2DY() - camera.getCameraY() * depth ;
+            int w = (int)(obj.getImage().getWidth() * scale);
+            int h = (int)(obj.getImage().getHeight() * scale);
+
+            g.drawImage(
+                   obj.getImage(),
+                    (int) drawX,
+                    (int) drawY,
+                    w,
+                    h,
+                    null
+            );
+        }
+    }
+
+    private void drawTile(Graphics g , Tile tile) {
+        BufferedImage tex = tile.getTexture() ;
+
+        int tileX = (int) tile.getPosition().getVector2DX() ;
+        int tileY = (int) tile.getPosition().getVector2DY() ;
+
+        int tileW = (int) tile.getTileWidth() ;
+        int tileH = (int) tile.getTileHeight() ;
+
+        int texW = tex.getWidth() ;
+        int texH = tex.getHeight() ;
+
+        for(int x = 0 ; x < tileW ; x += texW) {
+            for(int y = 0 ; y < tileH ; y += texH) {
+                int drawW = Math.min(texW , tileW - x) ;
+                int drawH = Math.min(texH , tileH - y) ;
+
+                g.drawImage(
+                        tex,
+                        tileX + x,
+                        tileY + y,
+                        tileX + x + drawW,
+                        tileY + y + drawH,
+                        0,
+                        0,
+                        drawW,
+                        drawH,
+                        null
+                );
+            }
+        }
     }
 }

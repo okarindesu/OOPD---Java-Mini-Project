@@ -1,15 +1,14 @@
 package entities;
 
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Objects;
 
 public class Level {
     private ArrayList<Tile> tiles ;
-    private BufferedImage background ;
+    private ArrayList<ParallaxObject> parallaxObjects ;
 
-    public Level(ArrayList<Tile> tiles , BufferedImage backgrounf) {
-        this.background = backgrounf ;
+    public Level(ArrayList<Tile> tiles , ArrayList<ParallaxObject> parallaxObjects) {
+        this.parallaxObjects = parallaxObjects ;
         this.tiles = tiles ;
     }
 
@@ -32,5 +31,5 @@ public class Level {
     }
 
     public int getLevelSize() { return tiles.size() ; }
-    public BufferedImage getBackground() { return this.background ; }
+    public ArrayList<ParallaxObject> getParallaxObjects() { return parallaxObjects ; }
 }
