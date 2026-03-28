@@ -23,7 +23,7 @@ public class Robot {
     private static final long ATTACK_COOLDOWN = 500; // 500ms cooldown between attacks
     private static final float ATTACK_DAMAGE = 20.0f ;
     private static final float MAX_HEALTH = 100.0f ;
-    private static final int MAX_LIVES = 3 ;
+    private static final int MAX_LIVES = 2 ;
 
     public Robot(float x , float y) {
         this.position = new Vector2D(x , y) ;
@@ -78,14 +78,28 @@ public class Robot {
         return lives > 0 ;
     }
     public void respawn() {
+        // health lost from previous life is consumed in RobotSystem (lives decrement)
+        health = MAX_HEALTH ;
+        position.set(spawnPosition);
+        velocity.set(0, 0);
+        onSurface = false ;
+        isAttacking = false ;
+    }
+
+    public void loseLife() {
         if (lives > 0) {
             lives-- ;
-            health = MAX_HEALTH ;
-            position.set(spawnPosition);
-            velocity.set(0, 0);
-            onSurface = false ;
-            isAttacking = false ;
         }
+    }
+
+    public void reset() {
+        lives = MAX_LIVES ;
+        health = MAX_HEALTH ;
+        position.set(spawnPosition);
+        velocity.set(0, 0);
+        onSurface = false ;
+        isAttacking = false ;
+        gameOverforRobo = false ;
     }
 
     public Vector2D getPosition() { return this.position ; }
@@ -108,7 +122,7 @@ public class Robot {
         this.health = health ;
     }
     public int getLives() {
-        return this.lives ;
+        return this.lives + 1; // added + 1 here for display issue
     }
     public static float getMaxHealth() {
         return MAX_HEALTH ;

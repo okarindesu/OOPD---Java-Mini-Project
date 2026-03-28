@@ -19,7 +19,7 @@ public class GameRenderer {
         this.height = height ;
     }
 
-    public void render(Robot robot1 , Robot robot2 , Level level , Camera camera) {
+    public void render(Robot robot1 , Robot robot2 , Level level , Camera camera , entities.RobotSystem robotSystem) {
         BufferStrategy bs = canvas.getBufferStrategy() ;
         if (bs == null) return ;
 
@@ -33,7 +33,7 @@ public class GameRenderer {
         drawLevel(g , level , camera) ;
         drawRobot(g , robot1 , Color.RED) ;
         drawRobot(g , robot2 , Color.CYAN) ;
-        drawUI(g , robot1 , robot2) ;
+        drawUI(g , robot1 , robot2, robotSystem) ;
 
         g.setColor(Color.WHITE) ;
         g.drawString("RoboWars" , 10 , 20) ;
@@ -67,7 +67,7 @@ public class GameRenderer {
         }
     }
 
-    private void drawUI(Graphics g, Robot robot1 , Robot robot2) {
+    private void drawUI(Graphics g, Robot robot1 , Robot robot2, entities.RobotSystem robotSystem) {
         g.setColor(Color.WHITE);
         g.setFont(new Font("Arial", Font.BOLD, 16));
 
@@ -97,6 +97,22 @@ public class GameRenderer {
 
         // Health bar for P2
         drawHealthBar(g, width - 160, 100, 150, 15, robot2.getHealth(), Robot.getMaxHealth(), Color.CYAN);
+
+        if (robotSystem.isGameOver()) {
+            g.setColor(new Color(0, 0, 0, 170));
+            g.fillRect(0, 0, width, height);
+
+            g.setColor(Color.WHITE);
+            g.setFont(new Font("Arial", Font.BOLD, 32));
+            String result = robotSystem.getWinner() + " Wins!";
+            int strW = g.getFontMetrics().stringWidth(result);
+            g.drawString(result, (width - strW) / 2, height / 2 - 20);
+
+            g.setFont(new Font("Arial", Font.BOLD, 20));
+            String replay = "Press R to Replay";
+            int replayW = g.getFontMetrics().stringWidth(replay);
+            g.drawString(replay, (width - replayW) / 2, height / 2 + 20);
+        }
     }
 
     private void drawHealthBar(Graphics g, int x, int y, int width, int height, float currentHealth, float maxHealth, Color color) {

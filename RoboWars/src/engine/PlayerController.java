@@ -9,11 +9,15 @@ public class PlayerController {
     private Robot robot1 ;
     private Robot robot2 ;
     private InputHandler input ;
+    private boolean isPlayer1 ;
+    private static final int WORLD_WIDTH = 1280 ;
+    private static final int WORLD_HEIGHT = 720 ;
 
     public PlayerController(Robot robot1 , Robot robot2 , InputHandler input) {
         this.robot1 = robot1 ;
         this.robot2 = robot2 ;
         this.input = input ;
+        this.isPlayer1 = isPlayer1 ;
     }
 
     public void control() {

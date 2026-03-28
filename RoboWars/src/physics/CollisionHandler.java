@@ -77,12 +77,12 @@ public class CollisionHandler {
 
     private void robottoRobotCollisions(CollisionResolver collisionResolver , Robot robot1 , Robot robot2) {
         float x1 = robot1.getPosition().getVector2DX() ;
-        float y1 = robot1.getVelocity().getVector2DY() ;
+        float y1 = robot1.getPosition().getVector2DY() ;
         float w1 = robot1.getRoboWidth() ;
         float h1 = robot1.getRoboHeight() ;
 
         float x2 = robot2.getPosition().getVector2DX() ;
-        float y2 = robot2.getVelocity().getVector2DY() ;
+        float y2 = robot2.getPosition().getVector2DY() ;
         float w2 = robot2.getRoboWidth() ;
         float h2 = robot2.getRoboHeight() ;
 

@@ -9,6 +9,7 @@ import physics.PhysicsSystem;
 import utils.Vector2D;
 
 import java.awt.*;
+import java.awt.event.KeyEvent;
 
 public class GameLoop extends Canvas implements Runnable {
     private Thread thread ;
@@ -95,22 +96,33 @@ public class GameLoop extends Canvas implements Runnable {
         double delta = 0 ;
 
         while(running) {
-            playerController.control() ;
-            collisionHandler.handleCollisions(collisionResolver , level , robot1 , robot2 , WIDTH , HEIGHT) ;
+            if (!robotSystem.isGameOver()) {
+                playerController.control() ;
 
-            robotSystem.checkAttacksRobots();
-            robotSystem.checkRespawns();
-            robotSystem.checkWinCondition();
+                // Process attacks while robots are in their current positions (contact check), before collision separation.
+                robotSystem.checkAttacksRobots();
 
-            long now = System.nanoTime() ;
-            delta += (now - lastTime) / nsPerUpdate ;
-            lastTime = now ;
+                collisionHandler.handleCollisions(collisionResolver , level , robot1 , robot2 , WIDTH , HEIGHT) ;
 
-            while(delta >= 1) {
-                physicsSystem.update(robot1 , robot2 , level) ;
-                delta-- ;
+                robotSystem.checkRespawns();
+                robotSystem.checkWinCondition();
+
+                long now = System.nanoTime() ;
+                delta += (now - lastTime) / nsPerUpdate ;
+                lastTime = now ;
+
+                while(delta >= 1) {
+                    physicsSystem.update(robot1 , robot2 , level) ;
+                    delta-- ;
+                }
+            } else {
+                // allow reboot of game
+                if (inputHandler.isKeyPressed(KeyEvent.VK_R)) {
+                    robotSystem.reset();
+                }
             }
-            gameRenderer.render(robot1 , robot2 , level , camera) ;
+
+            gameRenderer.render(robot1 , robot2 , level , camera , robotSystem) ;
         }
         stop() ;
     }
