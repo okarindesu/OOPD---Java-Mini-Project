@@ -1,21 +1,51 @@
 package physics;
 
+import weapons.Projectile;
 import entities.Level;
 import entities.Robot;
 import entities.Tile;
 import utils.Vector2D;
-import weapons.Projectile;
-import weapons.ProjectileSystem;
+
+import java.util.List;
 
 public class CollisionHandler {
-    public void handleCollisions(CollisionResolver collisionResolver , Level level , Robot robot1 , Robot robot2 , ProjectileSystem ps,
-                                 int screenWidth , int screenHeight) {
+    public void handleCollisions(CollisionResolver collisionResolver , Level level , Robot robot1 , Robot robot2 , int screenWidth , int screenHeight) {
         handleLeveltoLevelCollisions(collisionResolver , level) ;
         robotLevelCollision(collisionResolver , robot1 , level) ;
         robotLevelCollision(collisionResolver , robot2 , level) ;
         robottoRobotCollisions(collisionResolver , robot1 , robot2) ;
         robotBoundaryCollisions(collisionResolver , robot1 , robot2 , screenWidth , screenHeight) ;
-        projectileRobotCollisions(ps, robot1, robot2);
+        handleProjectileCollisions(robot1 , robot2 , level , screenWidth , screenHeight) ;
+        handleProjectileCollisions(robot2 , robot1 , level , screenWidth , screenHeight) ;
+    }
+
+    public void handleProjectileCollisions(Robot shooterRobo , Robot shotRobo , Level level , int screenWidth , int screenHeight) {
+        if (shooterRobo.getProjectileSystem() == null) return;
+        List<Projectile> p = shooterRobo.getProjectileSystem().getProjectiles();
+        int levelSize = level.getLevelSize();
+        for(Projectile proj : p) {
+            if(!proj.isActive()) continue;
+
+            for(int i = 0 ; i < levelSize ; i++) {
+                Tile tile = level.findTile(i);
+                if (projectileTileCollision(proj , tile)) {
+                    proj.deactivate();
+                    break;
+                }
+            }
+
+            if(!proj.isActive()) continue;
+
+            if (projectileRobotCollision(proj , shotRobo)) {
+                shotRobo.takeDamage(proj.getDamage());
+                proj.deactivate();
+                continue;
+            }
+
+            if (projectileBoundaryCollision(proj , screenWidth , screenHeight)) {
+                proj.deactivate();
+            }
+        }
     }
 
     public void robotLevelCollision(CollisionResolver collisionResolver ,Robot robot , Level level) {
@@ -46,7 +76,7 @@ public class CollisionHandler {
         float x2 = tile2.getPosition().getVector2DX() ;
         float y2 = tile2.getPosition().getVector2DY() ;
         float w2 = tile2.getTileWidth() ;
-        float h2 = tile2.getTileHeight() ;
+        float h2 = tile1.getTileHeight() ;
 
         boolean overlapX = x1 < x2 + w2 && x1 + w1 > x2;
         boolean overlapY = y1 < y2 + h2 && y1 + h1 > y2;
@@ -81,12 +111,12 @@ public class CollisionHandler {
 
     private void robottoRobotCollisions(CollisionResolver collisionResolver , Robot robot1 , Robot robot2) {
         float x1 = robot1.getPosition().getVector2DX() ;
-        float y1 = robot1.getPosition().getVector2DY() ;
+        float y1 = robot1.getVelocity().getVector2DY() ;
         float w1 = robot1.getRoboWidth() ;
         float h1 = robot1.getRoboHeight() ;
 
         float x2 = robot2.getPosition().getVector2DX() ;
-        float y2 = robot2.getPosition().getVector2DY() ;
+        float y2 = robot2.getVelocity().getVector2DY() ;
         float w2 = robot2.getRoboWidth() ;
         float h2 = robot2.getRoboHeight() ;
 
@@ -101,30 +131,43 @@ public class CollisionHandler {
         collisionResolver.resolveRobotBoundaryCollisions(robot2 , screenWidth , screenHeight) ;
     }
 
-    private void projectileRobotCollisions(ProjectileSystem ps, Robot r1, Robot r2) {
-        for (Projectile p : ps.getProjectiles()) {
-            if (!p.isActive()) continue;
+    private boolean projectileTileCollision(Projectile proj, Tile tile) {
+        float px = proj.getPosition().getVector2DX();
+        float py = proj.getPosition().getVector2DY();
 
-            float px = p.getPosition().getVector2DX();
-            float py = p.getPosition().getVector2DY();
+        float tx = tile.getPosition().getVector2DX();
+        float ty = tile.getPosition().getVector2DY();
+        float tw = tile.getTileWidth();
+        float th = tile.getTileHeight();
 
-            if (p.getOwner() != r1 && hit(px, py, r1)) {
-                r1.takeDamage(p.getDamage());
-                p.deactivate();
-            }
+        boolean insideX = px >= tx && px <= tx + tw;
+        boolean insideY = py >= ty && py <= ty + th;
 
-            if (p.getOwner() != r2 && hit(px, py, r2)) {
-                r2.takeDamage(p.getDamage());
-                p.deactivate();
-            }
-        }
+        return insideX && insideY;
     }
 
-    private boolean hit(float px, float py, Robot r) {
-        float rx = r.getPosition().getVector2DX();
-        float ry = r.getPosition().getVector2DY();
+    private boolean projectileRobotCollision(Projectile proj, Robot robot) {
 
-        return px >= rx && px <= rx + r.getRoboWidth() &&
-                py >= ry && py <= ry + r.getRoboHeight();
+        float px = proj.getPosition().getVector2DX();
+        float py = proj.getPosition().getVector2DY();
+
+        float rx = robot.getPosition().getVector2DX();
+        float ry = robot.getPosition().getVector2DY();
+        float rw = robot.getRoboWidth();
+        float rh = robot.getRoboHeight();
+
+        float padding = 5.0f;
+
+        boolean insideX = px >= (rx - padding) && px <= (rx + rw + padding);
+        boolean insideY = py >= (ry - padding) && py <= (ry + rh + padding);
+
+        return insideX && insideY;
+    }
+
+    private boolean projectileBoundaryCollision(Projectile proj , int screenWidth , int screenHeight) {
+        float px = proj.getPosition().getVector2DX();
+        float py = proj.getPosition().getVector2DY();
+
+        return px <= 0 || px >= screenWidth || py <= 0 || py >= screenHeight;
     }
 }

@@ -7,22 +7,17 @@ import physics.CollisionResolver;
 import physics.GameRenderer;
 import physics.PhysicsSystem;
 import utils.Vector2D;
-import weapons.Handgun;
-import weapons.MeleeWeapon;
-import weapons.ProjectileSystem;
 
+import javax.imageio.ImageIO;
 import java.awt.*;
-import java.awt.event.KeyEvent;
+import java.awt.image.BufferedImage;
+import java.io.File;
 
 public class GameLoop extends Canvas implements Runnable {
     private Thread thread ;
     private boolean running = false ;
-    public boolean restartHandled = false;
     private Vector2D initPos1 ;
     private Vector2D initPos2 ;
-    private ProjectileSystem projectileSystem;
-
-    private GameStateManager gameStateManager;
 
     private PlayerController playerController ;
     private InputHandler inputHandler ;
@@ -33,134 +28,130 @@ public class GameLoop extends Canvas implements Runnable {
     private GameRenderer gameRenderer ;
     private CollisionHandler collisionHandler ;
     private CollisionResolver collisionResolver ;
-    private String filePath ;
-
-    private Level level ;
-    private Level startMenuLevel;
-
     private Camera camera ;
+    private AnimationInitializer animationInitializer ;
+    private LevelSelectionContext levelSelectionContext ;
+
+    private int selectedLevel = 0 ;
+    private LevelInfo[] levels ;
+    private boolean roundActive = false ;
 
     public static final int WIDTH = 1280 ;
     public static final int HEIGHT = 720 ;
 
 
     public GameLoop() {
-        // Create robots with colors: Player 1 = BLUE, Player 2 = GREEN
-        robot1 = new Robot(400, 0, Color.BLUE);
-        robot2 = new Robot(800, 0, Color.GREEN);
-        
-        // Set projectile colors
-        robot1.setProjectileColor(Color.RED);   // Red projectiles for Player 1
-        robot2.setProjectileColor(Color.GREEN);   // Green projectiles for Player 2
+        AnimationManager robo1Manager = new AnimationManager(200);
+AnimationManager robo2Manager = new AnimationManager(200);
+AnimationInitializer initializer = new AnimationInitializer(robo1Manager, robo2Manager);
+initializer.initializeRoboAnimation();
+        initPos1 = new Vector2D(100 , 0) ;
+        robot1 = new Robot(initPos1, robo1Manager) ;
+
+        initPos2 = new Vector2D(400 , 0) ;
+        robot2 = new Robot(initPos2, robo2Manager) ;
+
+        robotSystem = new RobotSystem(robot1 , robot2) ;
+
+        inputHandler = new InputHandler() ;
+        addKeyListener(inputHandler) ;
+        setFocusable(true) ;
+
+        camera = new Camera(0 , 0) ;
+
+        playerController = new PlayerController(robot1 , robot2 , inputHandler) ;
+        physicsSystem = new PhysicsSystem() ;
+        gameRenderer = new GameRenderer(this , WIDTH , HEIGHT) ;
+        setPreferredSize(new Dimension(WIDTH , HEIGHT)) ;
+
+        collisionHandler = new CollisionHandler() ;
+        collisionResolver = new CollisionResolver() ;
+
+        animationInitializer = new AnimationInitializer(robot1.getAnimationManager() , robot2.getAnimationManager()) ;
+        animationInitializer.initializeRoboAnimation();
+
+        levels = new LevelInfo[] {
+                new LevelInfo(
+                        "resources/levels/Level1.wrl",
+                        "Aurora",
+                        loadImage("resources/backgrounds/preview/b8.png")
+                ),
+                new LevelInfo(
+                        "resources/levels/Level2.wrl",
+                        "Dunes",
+                        loadImage("resources/backgrounds/preview/b2.png")
+                ),
+                new LevelInfo(
+                        "resources/levels/Level3.wrl",
+                        "Dunes",
+                        loadImage("resources/backgrounds/preview/b3.png")
+                ),
+                new LevelInfo(
+                        "resources/levels/Level4.wrl",
+                        "Dunes",
+                        loadImage("resources/backgrounds/preview/b4.png")
+                ),
+                new LevelInfo(
+                        "resources/levels/Level5.wrl",
+                        "Dunes",
+                        loadImage("resources/backgrounds/preview/b5.png")
+                ),
+                new LevelInfo(
+                        "resources/levels/Level6.wrl",
+                        "Dunes",
+                        loadImage("resources/backgrounds/preview/b6.png")
+                ),
+                new LevelInfo(
+                        "resources/levels/Level7.wrl",
+                        "Dunes",
+                        loadImage("resources/backgrounds/preview/b7.png")
+                ),
+        };
+
+        levelSelectionContext = new LevelSelectionContext(GameState.START_SCREEN_STATE , levels , selectedLevel) ;
+    }
+
+    private BufferedImage loadImage(String path) {
+        try {
+            return ImageIO.read(new File(path));
+        } catch (Exception e) {
+            System.out.println("Failed to load: " + path);
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private void ensureLevelLoaded() {
+        if (levelSelectionContext.getLevel() == null) {
+            int index = levelSelectionContext.getSelectedLevel();
+            LevelInfo info = levels[index];
+            levelSelectionContext.setLevel(LevelLoader.loadlevel(info.getFilePath()));
+        }
+    }
+
+    private void setupNewRound() {
+        // reset robots and the system
+        initPos1 = new Vector2D(100, 0);
+        initPos2 = new Vector2D(400, 0);
+
+        robot1 = new Robot(initPos1, robot1.getAnimationManager());
+        robot2 = new Robot(initPos2,robot2.getAnimationManager());
 
         robotSystem = new RobotSystem(robot1, robot2);
 
-        projectileSystem = new ProjectileSystem();
-
-        robot1.setProjectileSystem(projectileSystem);
-        robot2.setProjectileSystem(projectileSystem);
-
-        robot1.setWeapon(new Handgun());     // Gun
-        robot2.setWeapon(new MeleeWeapon()); // Sword
-
-        inputHandler = new InputHandler();
-        addKeyListener(inputHandler);
-        setFocusable(true);
-
-        gameStateManager = new GameStateManager();
-
-        camera = new Camera(0, 0);
+        animationInitializer.initializeRoboAnimation();
 
         playerController = new PlayerController(robot1, robot2, inputHandler);
-        physicsSystem = new PhysicsSystem();
-        gameRenderer = new GameRenderer(this, WIDTH, HEIGHT);
-        setPreferredSize(new Dimension(WIDTH, HEIGHT));
 
-        collisionHandler = new CollisionHandler();
-        collisionResolver = new CollisionResolver();
+        robotSystem.reset();
 
-        filePath = "resources/levels/Vertical_Movement.wrl";
-        level = LevelLoader.loadlevel(filePath);
+        levelSelectionContext.setWinnerMessage(null);
 
-        startMenuLevel = LevelLoader.loadlevel("resources/levels/start_menu.wrl");
+        roundActive = true;
+    }
 
-        // ========== LOAD ANIMATIONS ==========
-        
-        // Player 1 (BLUE - Gun) animations
-        robot1.getAnimationManager().addAnimation("idle_right", 
-            SpriteLoader.loadFrames("/sprites/player1/idle_right/frame1.png"));
-        robot1.getAnimationManager().addAnimation("idle_left", 
-            SpriteLoader.loadFrames("/sprites/player1/idle_left/frame1.png"));
-        robot1.getAnimationManager().addAnimation("walk_right", 
-            SpriteLoader.loadFrames(
-                "/sprites/player1/walk_right/frame1.png",
-                "/sprites/player1/walk_right/frame2.png",
-                "/sprites/player1/walk_right/frame3.png",
-                "/sprites/player1/walk_right/frame4.png"
-            ));
-        robot1.getAnimationManager().addAnimation("walk_left", 
-            SpriteLoader.loadFrames(
-                "/sprites/player1/walk_left/frame1.png",
-                "/sprites/player1/walk_left/frame2.png",
-                "/sprites/player1/walk_left/frame3.png",
-                "/sprites/player1/walk_left/frame4.png"
-            ));
-        robot1.getAnimationManager().addAnimation("jump_left", 
-            SpriteLoader.loadFrames("/sprites/player1/jump_left/frame1.png"));
-        robot1.getAnimationManager().addAnimation("jump_right", 
-            SpriteLoader.loadFrames("/sprites/player1/jump_right/frame1.png"));
-        robot1.getAnimationManager().addAnimation("attack_gun_left", 
-            SpriteLoader.loadFrames(
-                "/sprites/player1/attack_gun_left/frame1.png",
-                "/sprites/player1/attack_gun_left/frame2.png",
-                "/sprites/player1/attack_gun_left/frame3.png"
-            ));
-        robot1.getAnimationManager().addAnimation("attack_gun_right", 
-            SpriteLoader.loadFrames(
-                "/sprites/player1/attack_gun_right/frame1.png",
-                "/sprites/player1/attack_gun_right/frame2.png",
-                "/sprites/player1/attack_gun_right/frame3.png"
-            ));
-
-        // Player 2 (GREEN - Sword) animations
-        robot2.getAnimationManager().addAnimation("idle_right", 
-            SpriteLoader.loadFrames("/sprites/player2/idle_right/frame1.png"));
-        robot2.getAnimationManager().addAnimation("idle_left", 
-            SpriteLoader.loadFrames("/sprites/player2/idle_left/frame1.png"));
-        robot2.getAnimationManager().addAnimation("walk_right", 
-            SpriteLoader.loadFrames(
-                "/sprites/player2/walk_right/frame1.png",
-                "/sprites/player2/walk_right/frame2.png",
-                "/sprites/player2/walk_right/frame3.png",
-                "/sprites/player2/walk_right/frame4.png"
-            ));
-        robot2.getAnimationManager().addAnimation("walk_left", 
-            SpriteLoader.loadFrames(
-                "/sprites/player2/walk_left/frame1.png",
-                "/sprites/player2/walk_left/frame2.png",
-                "/sprites/player2/walk_left/frame3.png",
-                "/sprites/player2/walk_left/frame4.png"
-            ));
-        robot2.getAnimationManager().addAnimation("jump_left", 
-            SpriteLoader.loadFrames("/sprites/player2/jump_left/frame1.png"));
-        robot2.getAnimationManager().addAnimation("jump_right", 
-            SpriteLoader.loadFrames("/sprites/player2/jump_right/frame1.png"));
-        robot2.getAnimationManager().addAnimation("attack_sword_left", 
-            SpriteLoader.loadFrames(
-                "/sprites/player2/attack_sword_left/frame1.png",
-                "/sprites/player2/attack_sword_left/frame2.png",
-                "/sprites/player2/attack_sword_left/frame3.png"
-            ));
-        robot2.getAnimationManager().addAnimation("attack_sword_right", 
-            SpriteLoader.loadFrames(
-                "/sprites/player2/attack_sword_right/frame1.png",
-                "/sprites/player2/attack_sword_right/frame2.png",
-                "/sprites/player2/attack_sword_right/frame3.png"
-            ));
-
-        // Set initial animation states
-        robot1.getAnimationManager().setState("idle_right");
-        robot2.getAnimationManager().setState("idle_left");
+    private void endRound() {
+        roundActive = false;
     }
 
     public synchronized void start() {
@@ -191,170 +182,82 @@ public class GameLoop extends Canvas implements Runnable {
         }
     }
 
-
-    public void restartGame() {
-        // Create new robots with colors
-        robot1 = new Robot(100, 0, Color.BLUE);
-        robot2 = new Robot(400, 0, Color.GREEN);
-        
-        // Set projectile colors
-        robot1.setProjectileColor(Color.RED);   // Red projectiles for Player 1
-        robot2.setProjectileColor(Color.RED);   // Red projectiles for Player 2
-
-        robotSystem = new RobotSystem(robot1, robot2);
-        
-        robot1.setProjectileSystem(projectileSystem);
-        robot2.setProjectileSystem(projectileSystem);
-        
-        robot1.setWeapon(new Handgun());
-        robot2.setWeapon(new MeleeWeapon());
-
-        level = LevelLoader.loadlevel(filePath);
-
-        playerController = new PlayerController(robot1, robot2, inputHandler);
-
-        camera.setCameraX(0);
-        camera.setCameraY(0);
-        
-        // Reload animations for new robots
-        // Player 1 (BLUE - Gun) animations
-        robot1.getAnimationManager().addAnimation("idle_right", 
-            SpriteLoader.loadFrames("/sprites/player1/idle_right/frame1.png"));
-        robot1.getAnimationManager().addAnimation("idle_left", 
-            SpriteLoader.loadFrames("/sprites/player1/idle_left/frame1.png"));
-        robot1.getAnimationManager().addAnimation("walk_right", 
-            SpriteLoader.loadFrames(
-                "/sprites/player1/walk_right/frame1.png",
-                "/sprites/player1/walk_right/frame2.png",
-                "/sprites/player1/walk_right/frame3.png",
-                "/sprites/player1/walk_right/frame4.png"
-            ));
-        robot1.getAnimationManager().addAnimation("walk_left", 
-            SpriteLoader.loadFrames(
-                "/sprites/player1/walk_left/frame1.png",
-                "/sprites/player1/walk_left/frame2.png",
-                "/sprites/player1/walk_left/frame3.png",
-                "/sprites/player1/walk_left/frame4.png"
-            ));
-        robot1.getAnimationManager().addAnimation("jump_left", 
-            SpriteLoader.loadFrames("/sprites/player1/jump_left/frame1.png"));
-        robot1.getAnimationManager().addAnimation("jump_right", 
-            SpriteLoader.loadFrames("/sprites/player1/jump_right/frame1.png"));
-        robot1.getAnimationManager().addAnimation("attack_gun_left", 
-            SpriteLoader.loadFrames(
-                "/sprites/player1/attack_gun_left/frame1.png",
-                "/sprites/player1/attack_gun_left/frame2.png",
-                "/sprites/player1/attack_gun_left/frame3.png"
-            ));
-        robot1.getAnimationManager().addAnimation("attack_gun_right", 
-            SpriteLoader.loadFrames(
-                "/sprites/player1/attack_gun_right/frame1.png",
-                "/sprites/player1/attack_gun_right/frame2.png",
-                "/sprites/player1/attack_gun_right/frame3.png"
-            ));
-
-        // Player 2 (GREEN - Sword) animations
-        robot2.getAnimationManager().addAnimation("idle_right", 
-            SpriteLoader.loadFrames("/sprites/player2/idle_right/frame1.png"));
-        robot2.getAnimationManager().addAnimation("idle_left", 
-            SpriteLoader.loadFrames("/sprites/player2/idle_left/frame1.png"));
-        robot2.getAnimationManager().addAnimation("walk_right", 
-            SpriteLoader.loadFrames(
-                "/sprites/player2/walk_right/frame1.png",
-                "/sprites/player2/walk_right/frame2.png",
-                "/sprites/player2/walk_right/frame3.png",
-                "/sprites/player2/walk_right/frame4.png"
-            ));
-        robot2.getAnimationManager().addAnimation("walk_left", 
-            SpriteLoader.loadFrames(
-                "/sprites/player2/walk_left/frame1.png",
-                "/sprites/player2/walk_left/frame2.png",
-                "/sprites/player2/walk_left/frame3.png",
-                "/sprites/player2/walk_left/frame4.png"
-            ));
-        robot2.getAnimationManager().addAnimation("jump_left", 
-            SpriteLoader.loadFrames("/sprites/player2/jump_left/frame1.png"));
-        robot2.getAnimationManager().addAnimation("jump_right", 
-            SpriteLoader.loadFrames("/sprites/player2/jump_right/frame1.png"));
-        robot2.getAnimationManager().addAnimation("attack_sword_left", 
-            SpriteLoader.loadFrames(
-                "/sprites/player2/attack_sword_left/frame1.png",
-                "/sprites/player2/attack_sword_left/frame2.png",
-                "/sprites/player2/attack_sword_left/frame3.png"
-            ));
-        robot2.getAnimationManager().addAnimation("attack_sword_right", 
-            SpriteLoader.loadFrames(
-                "/sprites/player2/attack_sword_right/frame1.png",
-                "/sprites/player2/attack_sword_right/frame2.png",
-                "/sprites/player2/attack_sword_right/frame3.png"
-            ));
-
-        // Set initial states
-        robot1.getAnimationManager().setState("idle_right");
-        robot2.getAnimationManager().setState("idle_left");
-    }
-
     @Override
     public void run() {
-        long lastTime = System.nanoTime();
-        double nsPerUpdate = 1_000_000_000.0 / 60.0; // 60 FPS
-        double delta = 0;
+        long lastTime = System.nanoTime() ;
+        double nsPerUpdate = 1_000_000_000.0/60.0 ;
+        double delta = 0 ;
 
-        while (running) {
-            long now = System.nanoTime();
-            delta += (now - lastTime) / nsPerUpdate;
-            lastTime = now;
+        while(running) {
 
-            // === Handle input for state transitions ===
-            gameStateManager.handleInput(inputHandler);
+            long now = System.nanoTime() ;
+            delta += (now - lastTime) / nsPerUpdate ;
+            lastTime = now ;
 
-            // === Update loop: only if the game is running ===
-            if (gameStateManager.isRunning()) {
-                // Player input
-                playerController.control();
+            GameState gameState = levelSelectionContext.getGameState();
 
-                // Update robot animations
-                robot1.updateAnimation();
-                robot2.updateAnimation();
-
-                // Handle collisions
-                collisionHandler.handleCollisions(collisionResolver, level, robot1, robot2, projectileSystem, WIDTH, HEIGHT);
-
-                // Check attacks, respawns, and win condition
-                robotSystem.checkAttacksRobots();
-                robotSystem.checkRespawns();
-                robotSystem.checkWinCondition();
-
-                // Handle restart input if game is over
-                if (robotSystem.getWinner() != null) {
-                    if (inputHandler.isKeyPressed(KeyEvent.VK_R) && !restartHandled) {
-                        restartGame();
-                        restartHandled = true;
-                    }
-                    if (!inputHandler.isKeyPressed(KeyEvent.VK_R)) {
-                        restartHandled = false;
-                    }
-                }
-
-                // === Physics updates ===
-                while (delta >= 1) {
-                    physicsSystem.update(robot1, robot2, level, projectileSystem);
-                    delta--;
-                }
+            if (gameState == GameState.LEVEL_SELECTION_STATE) {
+                endRound();
             }
 
-            // === Rendering ===
-            if (gameStateManager.isStartScreen()) {
-                gameRenderer.renderStartScreen(startMenuLevel);
-            } else if (gameStateManager.isRunning()) {
-                gameRenderer.render(robot1, robot2, level, camera, robotSystem.getWinner(), projectileSystem);
-            } else if (gameStateManager.isGameOver()) {
-                restartGame();
+            if (gameState == GameState.GAME_PLAYING_STATE && !roundActive) {
+                ensureLevelLoaded();
+                setupNewRound();
             }
+
+            while(delta >= 1) {
+                gameState = levelSelectionContext.getGameState();
+                switch(gameState) {
+                    case START_SCREEN_STATE:
+                        playerController.control(levelSelectionContext);
+                        break;
+                    case LEVEL_SELECTION_STATE :
+                        updateLevelSelection(levelSelectionContext);
+                        break;
+                    case GAME_PLAYING_STATE:
+                        updateGame(levelSelectionContext);
+                        // check win condition
+                        if (robotSystem.getWinner() != null) {
+                            levelSelectionContext.setWinnerMessage(robotSystem.getWinner());
+                            levelSelectionContext.setGameState(GameState.GAME_OVER_STATE);
+                            endRound();
+                        }
+                        break;
+                    case GAME_OVER_STATE:
+                        playerController.control(levelSelectionContext);
+                        if (levelSelectionContext.getGameState() == GameState.GAME_PLAYING_STATE) {
+                            robotSystem.reset();
+                            levelSelectionContext.setWinnerMessage(null);
+                            setupNewRound();
+                        } else if (levelSelectionContext.getGameState() == GameState.LEVEL_SELECTION_STATE) {
+                            endRound();
+                        }
+                        break;
+                }
+                delta-- ;
+            }
+            /*render logic */
+            gameRenderer.render(levelSelectionContext , robot1 , robot2 , camera) ;
         }
-
-        stop();
+        stop() ;
     }
 
+    private void updateGame(LevelSelectionContext levelSelectionContext) {
+        playerController.control(levelSelectionContext) ;
+        collisionHandler.handleCollisions(collisionResolver , levelSelectionContext.getLevel() , robot1 , robot2 , WIDTH , HEIGHT) ;
 
+        robot1.updateAnimation();
+        robot2.updateAnimation();
+
+        robotSystem.robotsShooting();
+        robotSystem.checkShootingRobots();
+        robotSystem.checkAttacksRobots();
+        robotSystem.checkRespawns();
+        robotSystem.checkWinCondition();
+        physicsSystem.update(robot1 , robot2 , levelSelectionContext.getLevel()) ;
+    }
+
+    private void updateLevelSelection(LevelSelectionContext levelSelectionContext) {
+        playerController.control(levelSelectionContext) ;
+    }
 }

@@ -1,194 +1,362 @@
 package physics;
 
+import weapons.Projectile;
+import engine.GameState;
+import engine.LevelSelectionContext;
 import entities.*;
 import entities.Robot;
 import utils.Vector2D;
-import weapons.Projectile;
-import weapons.ProjectileSystem;
 
 import java.awt.*;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
-import java.io.InputStream;
+import java.io.File;
+import java.util.List;
+import javax.imageio.ImageIO;
 
 public class GameRenderer {
     private Canvas canvas ;
     private int width ;
     private int height ;
-    private Font pixelFont;
 
-
+    private Font titleFont ;
+    private Font uiFont ;
+    private Font smallTitle , mediumTitle , bigTitle ;
+    private Font smallUI , mediumUI , bigUI ;
+    private BufferedImage startScreenBg ;
 
     public GameRenderer(Canvas canvas , int width , int height) {
-        this.canvas = canvas;
-        this.width = width;
-        this.height = height;
+        this.canvas = canvas ;
+        this.width = width ;
+        this.height = height ;
+        titleFont = loadFont("resources/fonts/p2p.ttf" , 20f) ;
+        uiFont = loadFont("resources/fonts/sk_bo.ttf" , 20f) ;
 
+        smallTitle = titleFont.deriveFont(14f) ;
+        mediumTitle = titleFont.deriveFont(24f) ;
+        bigTitle = titleFont.deriveFont(40f) ;
+
+        smallUI = uiFont.deriveFont(14f) ;
+        mediumUI = uiFont.deriveFont(24f) ;
+        bigUI = uiFont.deriveFont(40f) ;
+
+        startScreenBg = loadImage("resources/backgrounds/start_screen/1.png") ;
+    }
+
+    private Font loadFont(String path, float size) {
         try {
-            InputStream is = getClass().getResourceAsStream("/fonts/ka1.ttf");
-
-            if (is == null) {
-                throw new RuntimeException("Font file not found!");
-            }
-
-            pixelFont = Font.createFont(Font.TRUETYPE_FONT, is);
-
+            Font font = Font.createFont(Font.TRUETYPE_FONT, new File(path));
+            return font.deriveFont(size);
         } catch (Exception e) {
+            System.out.println("Failed to load font: " + path);
             e.printStackTrace();
-            pixelFont = new Font("Arial", Font.BOLD, 40);
+            return new Font("Arial", Font.PLAIN, (int) size); // fallback
         }
     }
 
-
-
-    public void renderStartScreen(Level level) {
-        BufferStrategy bs = canvas.getBufferStrategy();
-        if (bs == null) {
-            canvas.createBufferStrategy(3);
-            return;
-        }
-
-        Graphics g = bs.getDrawGraphics();
-
+    private BufferedImage loadImage(String path) {
         try {
-            // =========================
-            // 🌄 BACKGROUND (your image)
-            // =========================
-            drawMenuBackground(g, level);
-
-            Graphics2D g2d = (Graphics2D) g;
-
-            // =========================
-            // 🌫 LIGHT OVERLAY (soft)
-            // =========================
-            g2d.setColor(new Color(0, 0, 0, 60));
-            g2d.fillRect(0, 0, width, height);
-
-            // =========================
-            // 🎮 TITLE
-            // =========================
-            String title = "ROBO WARS";
-
-            g2d.setFont(pixelFont.deriveFont(48f));
-
-            int titleW = g2d.getFontMetrics().stringWidth(title);
-            g2d.setColor(new Color(40, 60, 80));
-
-            g2d.drawString(title, (width - titleW) / 2, height / 4);
-
-            // =========================
-            // 🔘 BUTTONS (PIXEL STYLE)
-            // =========================
-            int btnW = 300;
-            int btnH = 70;
-
-            int centerX = width / 2;
-
-            int playY = height / 2 - 40;
-            int exitY = playY + 100;
-
-            drawPixelButton(g2d, centerX - btnW / 2, playY, btnW, btnH, "PLAY", true);
-            drawPixelButton(g2d, centerX - btnW / 2, exitY, btnW, btnH, "EXIT", false);
-
-        } finally {
-            g.dispose();
+            return ImageIO.read(new File(path));
+        } catch (Exception e) {
+            System.out.println("Failed to load image: " + path);
+            e.printStackTrace();
+            return null;
         }
-
-        bs.show();
-    }
-    private void drawPixelButton(Graphics2D g, int x, int y, int w, int h, String text, boolean selected) {
-
-        // Base color
-        Color base = selected ? new Color(170, 190, 210) : new Color(140, 160, 180);
-        Color borderDark = new Color(70, 90, 110);
-        Color borderLight = new Color(220, 230, 240);
-
-        // =========================
-        // 🧱 BUTTON BODY
-        // =========================
-        g.setColor(base);
-        g.fillRect(x, y, w, h);
-
-        // =========================
-        // ✨ PIXEL BORDER (top/left light)
-        // =========================
-        g.setColor(borderLight);
-        g.fillRect(x, y, w, 4);           // top
-        g.fillRect(x, y, 4, h);           // left
-
-        // =========================
-        // 🌑 SHADOW BORDER (bottom/right)
-        // =========================
-        g.setColor(borderDark);
-        g.fillRect(x, y + h - 4, w, 4);   // bottom
-        g.fillRect(x + w - 4, y, 4, h);   // right
-
-        // =========================
-        // 🎯 TEXT
-        // =========================
-        g.setFont(pixelFont.deriveFont(26f));
-
-        int textW = g.getFontMetrics().stringWidth(text);
-
-        int textX = x + (w - textW) / 2;
-        int textY = y + (h / 2) + 10;
-
-        // Shadow
-        g.setColor(new Color(0, 0, 0, 120));
-        g.drawString(text, textX + 2, textY + 2);
-
-        // Main text
-        g.setColor(new Color(40, 50, 60));
-        g.drawString(text, textX, textY);
     }
 
-    public void render(Robot robot1 , Robot robot2 , Level level , Camera camera, String winner, ProjectileSystem ps) {
+    public void render(LevelSelectionContext levelSelectionContext , Robot robot1 , Robot robot2 , Camera camera) {
         BufferStrategy bs = canvas.getBufferStrategy() ;
         if (bs == null) return ;
+        Graphics g = bs.getDrawGraphics() ;
 
+        GameState gameState = levelSelectionContext.getGameState() ;
+        switch(gameState) {
+            case START_SCREEN_STATE:
+                startScreenRender(g);
+                break;
+            case LEVEL_SELECTION_STATE :
+                levelSelectionRender(g , levelSelectionContext) ;
+                break;
+            case GAME_PLAYING_STATE:
+                gameRender(g , robot1 , robot2 , levelSelectionContext.getLevel() , camera) ;
+                break;
+            case GAME_OVER_STATE:
+                // keep current game view behind overlay, then show UI
+                if(levelSelectionContext.getLevel() != null) {
+                    gameRender(g , robot1 , robot2 , levelSelectionContext.getLevel() , camera) ;
+                } else {
+                    g.setColor(Color.BLACK);
+                    g.fillRect(0,0, width, height);
+                }
+                gameOverRender(g , levelSelectionContext) ;
+                break;
+        }
+        g.dispose() ;
+        bs.show() ;
+    }
+
+    private void gameOverRender(Graphics g, LevelSelectionContext ctx) {
+        String winner = ctx.getWinnerMessage();
+        if (winner == null) winner = "Game Over";
+
+        g.setColor(new Color(0,0,0,170));
+        g.fillRect(0,0,width,height);
+
+        g.setFont(bigTitle);
+        g.setColor(Color.YELLOW);
+        int w = g.getFontMetrics().stringWidth(winner);
+        g.drawString(winner, (width-w)/2, height/2 - 120);
+
+        g.setFont(mediumUI);
+        g.setColor(Color.WHITE);
+        g.drawString("R - Restart this level", width/2 - 140, height/2 - 40);
+        g.drawString("S - Level select", width/2 - 140, height/2 + 10);
+        g.drawString("Q / ESC - Quit", width/2 - 140, height/2 + 60);
+
+        g.setFont(smallUI);
+        g.drawString("Press a key to continue", width/2 - 100, height/2 + 120);
+    }
+
+    private void startScreenRender(Graphics g) {
+        if (startScreenBg != null) {
+            g.drawImage(startScreenBg, 0, 0, width, height, null);
+        } else {
+            g.setColor(Color.BLACK);
+            g.fillRect(0, 0, width, height);
+        }
+
+        g.setFont(bigTitle);
+        g.setColor(Color.YELLOW);
+        String title = "RoboWars";
+        int titleWidth = g.getFontMetrics().stringWidth(title);
+        g.drawString(title, (width - titleWidth) / 2, height / 2 - 50);
+
+        g.setFont(mediumUI);
+        g.setColor(Color.WHITE);
+        String prompt = "Press ENTER to Play";
+        int promptWidth = g.getFontMetrics().stringWidth(prompt);
+        g.drawString(prompt, (width - promptWidth) / 2, height / 2 + 50);
+    }
+
+    private void levelSelectionRender(Graphics g , LevelSelectionContext levelSelectionContext) {
+        LevelInfo[] levels = levelSelectionContext.getLevels();
+        int selectedLevel = levelSelectionContext.getSelectedLevel();
+
+        Graphics2D g2 = (Graphics2D) g;
+
+        // ===== BACKGROUND =====
+        g.setColor(Color.BLACK);
+        g.fillRect(0, 0, width, height);
+
+        // ===== TITLE =====
+        g.setFont(bigTitle);
+        g.setColor(Color.WHITE);
+
+        String title = "RoboWars";
+        int titleWidth = g.getFontMetrics().stringWidth(title);
+        g.drawString(title, (width - titleWidth) / 2, 80);
+
+        g.setFont(mediumUI);
+        String subtitle = "Select Terrain";
+        int subWidth = g.getFontMetrics().stringWidth(subtitle);
+        g.drawString(subtitle, (width - subWidth) / 2, 120);
+
+        // ===== GRID CONFIG (720p FRIENDLY) =====
+        int columns = 4;
+
+        int spacingX = 30;
+        int spacingY = 50;
+
+        int totalSpacingX = (columns - 1) * spacingX;
+
+        int cardWidth = (width - 160 - totalSpacingX) / columns;
+        int cardHeight = (int)(cardWidth * 0.6f);
+
+        int startX = (width - (columns * cardWidth + totalSpacingX)) / 2;
+        int startY = 160;
+
+        // ===== LEVEL GRID =====
+        for (int i = 0; i < levels.length; i++) {
+
+            int row = i / columns;
+            int col = i % columns;
+
+            int x = startX + col * (cardWidth + spacingX);
+            int y = startY + row * (cardHeight + spacingY);
+
+            LevelInfo lvl = levels[i];
+
+            if (lvl.getPreviewImage() != null) {
+                g.drawImage(lvl.getPreviewImage(), x, y, cardWidth, cardHeight, null);
+            }
+
+            // Highlight selected
+            if (i == selectedLevel) {
+                g2.setColor(Color.YELLOW);
+                g2.setStroke(new BasicStroke(4));
+
+                // Outer glow
+                g2.drawRect(x - 3, y - 3, cardWidth + 6, cardHeight + 6);
+
+                // Light overlay
+                g2.setColor(new Color(255, 255, 0, 40));
+                g2.fillRect(x, y, cardWidth, cardHeight);
+            }
+
+            // Border
+            g2.setColor(Color.WHITE);
+            g2.setStroke(new BasicStroke(1));
+            g2.drawRect(x, y, cardWidth, cardHeight);
+
+            // Level title
+            g.setFont(mediumUI);
+            FontMetrics fm = g.getFontMetrics();
+
+            String titleText = lvl.getTitle();
+            int textWidth = fm.stringWidth(titleText);
+
+// Center text relative to card
+            int textX = x + (cardWidth - textWidth) / 2;
+            int textY = y + cardHeight + 25;
+
+            g.drawString(titleText, textX, textY);
+        }
+
+        // ===== CONTROLS =====
+        g.setFont(smallUI);
+
+        String label = "SELECT :";
+        String movement = "UP / DOWN / LEFT / RIGHT";
+        String plus = "+";
+        String enter = "ENTER";
+
+        int padding = 12;
+        int boxHeight = 32;
+        int gap = 15;
+
+        FontMetrics fm = g.getFontMetrics();
+
+        int labelWidth = fm.stringWidth(label);
+
+// Calculate widths
+        int moveW = fm.stringWidth(movement) + padding * 2;
+        int plusW = fm.stringWidth(plus) + padding * 2;
+        int enterW = fm.stringWidth(enter) + padding * 2;
+
+// Total width
+        int totalWidth = labelWidth + 20 + moveW + gap + plusW + gap + enterW;
+
+// Center horizontally
+        int x = (width - totalWidth) / 2;
+        int y = height - 70;
+
+// Draw label
+        g.setColor(Color.WHITE);
+        g.drawString(label, x, y + 22);
+        x += labelWidth + 20;
+
+// ===== MOVEMENT BOX =====
+        g.drawRect(x, y, moveW, boxHeight);
+
+// Center text
+        int moveTextX = x + (moveW - fm.stringWidth(movement)) / 2;
+        g.drawString(movement, moveTextX, y + 22);
+
+        x += moveW + gap;
+
+// ===== PLUS BOX =====
+        g.drawRect(x, y, plusW, boxHeight);
+        int plusTextX = x + (plusW - fm.stringWidth(plus)) / 2;
+        g.drawString(plus, plusTextX, y + 22);
+
+        x += plusW + gap;
+
+// ===== ENTER BOX =====
+        g.drawRect(x, y, enterW, boxHeight);
+        int enterTextX = x + (enterW - fm.stringWidth(enter)) / 2;
+        g.drawString(enter, enterTextX, y + 22);
+    }
+
+    private void gameRender(Graphics g , Robot robot1 , Robot robot2 , Level level , Camera camera) {
         camera.setCameraX(robot1.getPosition().getVector2DX() - width / 2) ;
         camera.setCameraY(robot1.getPosition().getVector2DY() - height / 2) ;
 
-        Graphics g = bs.getDrawGraphics() ;
         g.setColor(Color.BLACK) ;
         g.fillRect(0 , 0 , width , height) ;
 
         drawLevel(g , level , camera) ;
-        
-        // Render robots using their draw() method (handles sprites + animations)
-        robot1.draw(g);
-        robot2.draw(g);
-        
+        drawRobot(g , robot1 , Color.RED) ;
+        drawRobot(g , robot2 , Color.CYAN) ;
+        drawProjectiles(g , robot1) ;
+        drawProjectiles(g , robot2) ;
         drawUI(g , robot1 , robot2) ;
 
         g.setColor(Color.WHITE) ;
         g.drawString("RoboWars" , 10 , 20) ;
+    }
 
-        if (winner != null) {
-            g.setFont(new Font("Arial", Font.BOLD, 50));
-            g.setColor(Color.YELLOW);
+    private void drawProjectiles(Graphics g , Robot robot) {
+        if (robot.getProjectileSystem() == null) return;
+        List<Projectile> p1 = robot.getProjectileSystem().getProjectiles();
 
-            FontMetrics fm = g.getFontMetrics();
-            int textWidth = fm.stringWidth(winner);
+        for(Projectile p : p1) {
+            if(!p.isActive()) continue ;
 
-            int x = (width - textWidth) / 2;
-            int y = height / 2;
-
-            g.drawString(winner, x, y);
-        }
-
-        for (Projectile p : ps.getProjectiles()) {
-            if (!p.isActive()) continue;
-
-            int x = (int)p.getPosition().getVector2DX();
-            int y = (int)p.getPosition().getVector2DY();
+            int pX = (int) p.getPosition().getVector2DX() ;
+            int pY = (int) p.getPosition().getVector2DY() ;
 
             g.setColor(p.getColor());
-            g.fillOval(x, y, 12, 12);
+            g.fillOval(pX , pY , 8 , 8);
+        }
+    }
+
+    private void drawRobot(Graphics g , Robot robot , Color color) {
+        if(robot.gameOverforRobo) return ;
+        g.setColor(color) ;
+        Vector2D vec = robot.getPosition() ;
+        float roboWidth = robot.getRoboWidth() ;
+        float roboHeight = robot.getRoboHeight() ;
+
+        BufferedImage sprite = robot.getAnimationManager().getCurrentFrame() ;
+
+        boolean isHit = false ;
+        if(robot.isHit && (System.currentTimeMillis() - robot.hitTime < robot.HIT_DURATION)) isHit = true ;
+
+        if(sprite != null) {
+            if(isHit) sprite = toGrayScale(sprite) ;
+            g.drawImage(sprite , (int) vec.getVector2DX() , (int) vec.getVector2DY() , (int) roboWidth , (int) roboHeight , null) ;
+        }
+        else {
+            if (isHit) g.setColor(Color.DARK_GRAY);
+            else g.setColor(color);
+            g.fillRect((int) vec.getVector2DX(), (int) vec.getVector2DY(), (int) roboWidth, (int) roboHeight);
+        }
+    }
+
+    private BufferedImage toGrayScale(BufferedImage image) {
+        BufferedImage grayscale = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
+
+        // Apply grayscale filter while preserving transparency
+        for (int y = 0; y < image.getHeight(); y++) {
+            for (int x = 0; x < image.getWidth(); x++) {
+                int argb = image.getRGB(x, y);
+
+                // Extract color components
+                int alpha = (argb >> 24) & 0xFF;
+                int red = (argb >> 16) & 0xFF;
+                int green = (argb >> 8) & 0xFF;
+                int blue = argb & 0xFF;
+
+                // Calculate grayscale value using luminosity formula
+                int gray = (int)(0.299 * red + 0.587 * green + 0.114 * blue);
+
+                // Combine alpha with grayscale value
+                int grayscaleArgb = (alpha << 24) | (gray << 16) | (gray << 8) | gray;
+                grayscale.setRGB(x, y, grayscaleArgb);
+            }
         }
 
-        g.dispose() ;
-        bs.show() ;
+        return grayscale;
     }
 
     private void drawLevel(Graphics g , Level level , Camera camera) {
@@ -211,27 +379,27 @@ public class GameRenderer {
         g.setFont(new Font("Arial", Font.PLAIN, 12));
         g.drawString("P1: WASD + Q | P2: Arrows + Space", 10, 35);
 
-        // Player 1 Stats (BLUE)
-        g.setColor(Color.BLUE);
+        // Player 1 Stats
+        g.setColor(Color.RED);
         g.setFont(new Font("Arial", Font.BOLD, 14));
         g.drawString("P1", 10, 60);
         g.setFont(new Font("Arial", Font.PLAIN, 12));
         g.drawString("Health: " + String.format("%.0f", robot1.getHealth()) + "/" + (int)Robot.getMaxHealth(), 10, 75);
         g.drawString("Lives: " + robot1.getLives(), 10, 90);
 
-        // Health bar for P1 (BLUE)
-        drawHealthBar(g, 10, 100, 150, 15, robot1.getHealth(), Robot.getMaxHealth(), Color.BLUE);
+        // Health bar for P1
+        drawHealthBar(g, 10, 100, 150, 15, robot1.getHealth(), Robot.getMaxHealth(), Color.RED);
 
-        // Player 2 Stats (GREEN)
-        g.setColor(Color.GREEN);
+        // Player 2 Stats
+        g.setColor(Color.CYAN);
         g.setFont(new Font("Arial", Font.BOLD, 14));
         g.drawString("P2", width - 50, 60);
         g.setFont(new Font("Arial", Font.PLAIN, 12));
         g.drawString("Health: " + String.format("%.0f", robot2.getHealth()) + "/" + (int)Robot.getMaxHealth(), width - 180, 75);
         g.drawString("Lives: " + robot2.getLives(), width - 180, 90);
 
-        // Health bar for P2 (GREEN)
-        drawHealthBar(g, width - 160, 100, 150, 15, robot2.getHealth(), Robot.getMaxHealth(), Color.GREEN);
+        // Health bar for P2
+        drawHealthBar(g, width - 160, 100, 150, 15, robot2.getHealth(), Robot.getMaxHealth(), Color.CYAN);
     }
 
     private void drawHealthBar(Graphics g, int x, int y, int width, int height, float currentHealth, float maxHealth, Color color) {
@@ -249,7 +417,7 @@ public class GameRenderer {
     }
 
     private void drawBackground(Graphics g , Level level , Camera camera) {
-        float scale = 5.0f ;
+        float scale = 2.0f ; // Temporary Change
         for(ParallaxObject obj : level.getParallaxObjects()) {
             float depth = obj.getDepth() ;
 
@@ -268,22 +436,6 @@ public class GameRenderer {
             );
         }
     }
-
-    private void drawMenuBackground(Graphics g, Level level) {
-        for (ParallaxObject obj : level.getParallaxObjects()) {
-
-            // Draw full screen, no scaling, no camera
-            g.drawImage(
-                    obj.getImage(),
-                    0,
-                    0,
-                    width,
-                    height,
-                    null
-            );
-        }
-    }
-
 
     private void drawTile(Graphics g , Tile tile) {
         BufferedImage tex = tile.getTexture() ;

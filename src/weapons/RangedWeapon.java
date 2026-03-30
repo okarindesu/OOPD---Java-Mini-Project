@@ -19,7 +19,8 @@ public abstract class RangedWeapon implements Weapon {
 
         lastFireTime = System.currentTimeMillis();
 
-        Projectile p = createProjectile(user.getPosition(), user.direction, user);
+        String dir = user.getDirection() == 1 ? "right" : "left";
+        Projectile p = createProjectile(user.getPosition(), dir, user);
 
         if (p != null && user.getProjectileSystem() != null) {
             user.getProjectileSystem().addProjectile(p);

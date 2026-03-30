@@ -1,7 +1,6 @@
 package main;
 import engine.GameLoop;
 
-
 import javax.swing.*;
 
 public class Main {
@@ -19,10 +18,3 @@ public class Main {
         game.start() ;
     }
 }
-
-/*
-    Anshul : spawning points of powerups and powerups design
-    Ballu : Weapons , Bullet System / Heatlh System
-    Heramb : Texture and Traps on Levels
-    Sam : Sprites
- */

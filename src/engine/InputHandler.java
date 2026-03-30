@@ -8,7 +8,6 @@ import java.util.Set;
 public class InputHandler extends KeyAdapter {
     private Set<Integer> pressedKeys = new HashSet<>() ;
 
-
     @Override
     public void keyPressed(KeyEvent e) {
         pressedKeys.add(e.getKeyCode()) ;
