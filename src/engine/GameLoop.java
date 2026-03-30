@@ -22,6 +22,8 @@ public class GameLoop extends Canvas implements Runnable {
     private Vector2D initPos2 ;
     private ProjectileSystem projectileSystem;
 
+    private GameStateManager gameStateManager;
+
     private PlayerController playerController ;
     private InputHandler inputHandler ;
     private Robot robot1 ;
@@ -32,7 +34,10 @@ public class GameLoop extends Canvas implements Runnable {
     private CollisionHandler collisionHandler ;
     private CollisionResolver collisionResolver ;
     private String filePath ;
+
     private Level level ;
+    private Level startMenuLevel;
+
     private Camera camera ;
 
     public static final int WIDTH = 1280 ;
@@ -41,12 +46,12 @@ public class GameLoop extends Canvas implements Runnable {
 
     public GameLoop() {
         // Create robots with colors: Player 1 = BLUE, Player 2 = GREEN
-        robot1 = new Robot(100, 0, Color.BLUE);
-        robot2 = new Robot(400, 0, Color.GREEN);
+        robot1 = new Robot(400, 0, Color.BLUE);
+        robot2 = new Robot(800, 0, Color.GREEN);
         
         // Set projectile colors
         robot1.setProjectileColor(Color.RED);   // Red projectiles for Player 1
-        robot2.setProjectileColor(Color.RED);   // Red projectiles for Player 2
+        robot2.setProjectileColor(Color.GREEN);   // Green projectiles for Player 2
 
         robotSystem = new RobotSystem(robot1, robot2);
 
@@ -62,6 +67,8 @@ public class GameLoop extends Canvas implements Runnable {
         addKeyListener(inputHandler);
         setFocusable(true);
 
+        gameStateManager = new GameStateManager();
+
         camera = new Camera(0, 0);
 
         playerController = new PlayerController(robot1, robot2, inputHandler);
@@ -74,6 +81,8 @@ public class GameLoop extends Canvas implements Runnable {
 
         filePath = "resources/levels/Vertical_Movement.wrl";
         level = LevelLoader.loadlevel(filePath);
+
+        startMenuLevel = LevelLoader.loadlevel("resources/levels/start_menu.wrl");
 
         // ========== LOAD ANIMATIONS ==========
         
@@ -287,55 +296,64 @@ public class GameLoop extends Canvas implements Runnable {
 
     @Override
     public void run() {
-        long lastTime = System.nanoTime() ;
-        double nsPerUpdate = 1_000_000_000.0/60.0 ;
-        double delta = 0 ;
+        long lastTime = System.nanoTime();
+        double nsPerUpdate = 1_000_000_000.0 / 60.0; // 60 FPS
+        double delta = 0;
 
-        while(running) {
-            // If there's a winner, handle game over state
-            if (robotSystem.getWinner() != null) {
-                // Handle restart on 'R' press
-                if (inputHandler.isKeyPressed(KeyEvent.VK_R) && !restartHandled) {
-                    restartGame();
-                    restartHandled = true;
+        while (running) {
+            long now = System.nanoTime();
+            delta += (now - lastTime) / nsPerUpdate;
+            lastTime = now;
+
+            // === Handle input for state transitions ===
+            gameStateManager.handleInput(inputHandler);
+
+            // === Update loop: only if the game is running ===
+            if (gameStateManager.isRunning()) {
+                // Player input
+                playerController.control();
+
+                // Update robot animations
+                robot1.updateAnimation();
+                robot2.updateAnimation();
+
+                // Handle collisions
+                collisionHandler.handleCollisions(collisionResolver, level, robot1, robot2, projectileSystem, WIDTH, HEIGHT);
+
+                // Check attacks, respawns, and win condition
+                robotSystem.checkAttacksRobots();
+                robotSystem.checkRespawns();
+                robotSystem.checkWinCondition();
+
+                // Handle restart input if game is over
+                if (robotSystem.getWinner() != null) {
+                    if (inputHandler.isKeyPressed(KeyEvent.VK_R) && !restartHandled) {
+                        restartGame();
+                        restartHandled = true;
+                    }
+                    if (!inputHandler.isKeyPressed(KeyEvent.VK_R)) {
+                        restartHandled = false;
+                    }
                 }
-                if (!inputHandler.isKeyPressed(KeyEvent.VK_R)) {
-                    restartHandled = false;
+
+                // === Physics updates ===
+                while (delta >= 1) {
+                    physicsSystem.update(robot1, robot2, level, projectileSystem);
+                    delta--;
                 }
-                
-                // Handle exit on 'E' press
-                if (inputHandler.isKeyPressed(KeyEvent.VK_E)) {
-                    System.exit(0);
-                }
-                
-                // Continue to render the winner screen
-                gameRenderer.render(robot1 , robot2 , level , camera, robotSystem.getWinner(), projectileSystem) ;
-                continue;
             }
 
-            playerController.control() ;
-            
-            // Update animations
-            robot1.updateAnimation();
-            robot2.updateAnimation();
-            
-            collisionHandler.handleCollisions(collisionResolver, level, robot1, robot2, projectileSystem, WIDTH, HEIGHT);
-
-            robotSystem.checkRespawns();
-            robotSystem.checkWinCondition();
-            robotSystem.checkAttacksRobots();
-
-            long now = System.nanoTime() ;
-            delta += (now - lastTime) / nsPerUpdate ;
-            lastTime = now ;
-
-            while(delta >= 1) {
-                physicsSystem.update(robot1 , robot2 , level, projectileSystem) ;
-                delta-- ;
+            // === Rendering ===
+            if (gameStateManager.isStartScreen()) {
+                gameRenderer.renderStartScreen(startMenuLevel);
+            } else if (gameStateManager.isRunning()) {
+                gameRenderer.render(robot1, robot2, level, camera, robotSystem.getWinner(), projectileSystem);
+            } else if (gameStateManager.isGameOver()) {
+                restartGame();
             }
-            gameRenderer.render(robot1 , robot2 , level , camera, robotSystem.getWinner(), projectileSystem) ;
         }
-        stop() ;
+
+        stop();
     }
 
 

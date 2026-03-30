@@ -9,16 +9,137 @@ import weapons.ProjectileSystem;
 import java.awt.*;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
+import java.io.InputStream;
 
 public class GameRenderer {
     private Canvas canvas ;
     private int width ;
     private int height ;
+    private Font pixelFont;
+
+
 
     public GameRenderer(Canvas canvas , int width , int height) {
-        this.canvas = canvas ;
-        this.width = width ;
-        this.height = height ;
+        this.canvas = canvas;
+        this.width = width;
+        this.height = height;
+
+        try {
+            InputStream is = getClass().getResourceAsStream("/fonts/ka1.ttf");
+
+            if (is == null) {
+                throw new RuntimeException("Font file not found!");
+            }
+
+            pixelFont = Font.createFont(Font.TRUETYPE_FONT, is);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            pixelFont = new Font("Arial", Font.BOLD, 40);
+        }
+    }
+
+
+
+    public void renderStartScreen(Level level) {
+        BufferStrategy bs = canvas.getBufferStrategy();
+        if (bs == null) {
+            canvas.createBufferStrategy(3);
+            return;
+        }
+
+        Graphics g = bs.getDrawGraphics();
+
+        try {
+            // =========================
+            // 🌄 BACKGROUND (your image)
+            // =========================
+            drawMenuBackground(g, level);
+
+            Graphics2D g2d = (Graphics2D) g;
+
+            // =========================
+            // 🌫 LIGHT OVERLAY (soft)
+            // =========================
+            g2d.setColor(new Color(0, 0, 0, 60));
+            g2d.fillRect(0, 0, width, height);
+
+            // =========================
+            // 🎮 TITLE
+            // =========================
+            String title = "ROBO WARS";
+
+            g2d.setFont(pixelFont.deriveFont(48f));
+
+            int titleW = g2d.getFontMetrics().stringWidth(title);
+            g2d.setColor(new Color(40, 60, 80));
+
+            g2d.drawString(title, (width - titleW) / 2, height / 4);
+
+            // =========================
+            // 🔘 BUTTONS (PIXEL STYLE)
+            // =========================
+            int btnW = 300;
+            int btnH = 70;
+
+            int centerX = width / 2;
+
+            int playY = height / 2 - 40;
+            int exitY = playY + 100;
+
+            drawPixelButton(g2d, centerX - btnW / 2, playY, btnW, btnH, "PLAY", true);
+            drawPixelButton(g2d, centerX - btnW / 2, exitY, btnW, btnH, "EXIT", false);
+
+        } finally {
+            g.dispose();
+        }
+
+        bs.show();
+    }
+    private void drawPixelButton(Graphics2D g, int x, int y, int w, int h, String text, boolean selected) {
+
+        // Base color
+        Color base = selected ? new Color(170, 190, 210) : new Color(140, 160, 180);
+        Color borderDark = new Color(70, 90, 110);
+        Color borderLight = new Color(220, 230, 240);
+
+        // =========================
+        // 🧱 BUTTON BODY
+        // =========================
+        g.setColor(base);
+        g.fillRect(x, y, w, h);
+
+        // =========================
+        // ✨ PIXEL BORDER (top/left light)
+        // =========================
+        g.setColor(borderLight);
+        g.fillRect(x, y, w, 4);           // top
+        g.fillRect(x, y, 4, h);           // left
+
+        // =========================
+        // 🌑 SHADOW BORDER (bottom/right)
+        // =========================
+        g.setColor(borderDark);
+        g.fillRect(x, y + h - 4, w, 4);   // bottom
+        g.fillRect(x + w - 4, y, 4, h);   // right
+
+        // =========================
+        // 🎯 TEXT
+        // =========================
+        g.setFont(pixelFont.deriveFont(26f));
+
+        int textW = g.getFontMetrics().stringWidth(text);
+
+        int textX = x + (w - textW) / 2;
+        int textY = y + (h / 2) + 10;
+
+        // Shadow
+        g.setColor(new Color(0, 0, 0, 120));
+        g.drawString(text, textX + 2, textY + 2);
+
+        // Main text
+        g.setColor(new Color(40, 50, 60));
+        g.drawString(text, textX, textY);
     }
 
     public void render(Robot robot1 , Robot robot2 , Level level , Camera camera, String winner, ProjectileSystem ps) {
@@ -44,69 +165,16 @@ public class GameRenderer {
         g.drawString("RoboWars" , 10 , 20) ;
 
         if (winner != null) {
-            // Create pixelated font effect
-            Font pixelFont = new Font("Monospaced", Font.BOLD, 48);
-            g.setFont(pixelFont);
+            g.setFont(new Font("Arial", Font.BOLD, 50));
             g.setColor(Color.YELLOW);
 
             FontMetrics fm = g.getFontMetrics();
             int textWidth = fm.stringWidth(winner);
 
             int x = (width - textWidth) / 2;
-            int y = height / 2 - 50;
+            int y = height / 2;
 
-            // Draw winner text with shadow for better visibility
-            g.setColor(Color.BLACK);
-            g.drawString(winner, x + 2, y + 2);
-            g.setColor(Color.YELLOW);
             g.drawString(winner, x, y);
-
-            // Draw instructions in cute boxes
-            g.setFont(new Font("Monospaced", Font.BOLD, 20));
-            FontMetrics fm2 = g.getFontMetrics();
-            
-            String replayText = "Press R to Replay";
-            String exitText = "Press E to Exit";
-            
-            int replayWidth = fm2.stringWidth(replayText);
-            int exitWidth = fm2.stringWidth(exitText);
-            
-            int boxHeight = 40;
-            int boxPadding = 20;
-            
-            // Replay box
-            int replayBoxWidth = replayWidth + boxPadding * 2;
-            int replayX = (width - replayBoxWidth) / 2;
-            int replayY = y + 40;
-            
-            // Draw replay box with rounded corners and gradient
-            g.setColor(new Color(100, 200, 100)); // Light green
-            g.fillRoundRect(replayX, replayY, replayBoxWidth, boxHeight, 15, 15);
-            g.setColor(new Color(50, 150, 50)); // Darker green border
-            g.drawRoundRect(replayX, replayY, replayBoxWidth, boxHeight, 15, 15);
-            
-            // Replay text
-            g.setColor(Color.WHITE);
-            int replayTextX = replayX + (replayBoxWidth - replayWidth) / 2;
-            int replayTextY = replayY + (boxHeight + fm2.getAscent() - fm2.getDescent()) / 2;
-            g.drawString(replayText, replayTextX, replayTextY);
-            
-            // Exit box
-            int exitBoxWidth = exitWidth + boxPadding * 2;
-            int exitX = (width - exitBoxWidth) / 2;
-            int exitY = y + 90;
-            
-            // Draw exit box with rounded corners and gradient
-            g.setColor(new Color(200, 100, 100)); // Light red
-            g.fillRoundRect(exitX, exitY, exitBoxWidth, boxHeight, 15, 15);
-            g.setColor(new Color(150, 50, 50)); // Darker red border
-            g.drawRoundRect(exitX, exitY, exitBoxWidth, boxHeight, 15, 15);
-            
-            // Exit text
-            g.setColor(Color.WHITE);
-            int exitTextX = exitX + (exitBoxWidth - exitWidth) / 2;
-            int exitTextY = exitY + (boxHeight + fm2.getAscent() - fm2.getDescent()) / 2;
-            g.drawString(exitText, exitTextX, exitTextY);
         }
 
         for (Projectile p : ps.getProjectiles()) {
@@ -200,6 +268,22 @@ public class GameRenderer {
             );
         }
     }
+
+    private void drawMenuBackground(Graphics g, Level level) {
+        for (ParallaxObject obj : level.getParallaxObjects()) {
+
+            // Draw full screen, no scaling, no camera
+            g.drawImage(
+                    obj.getImage(),
+                    0,
+                    0,
+                    width,
+                    height,
+                    null
+            );
+        }
+    }
+
 
     private void drawTile(Graphics g , Tile tile) {
         BufferedImage tex = tile.getTexture() ;

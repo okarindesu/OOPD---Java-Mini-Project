@@ -28,7 +28,8 @@ public class Robot {
     public boolean onSurface = false;
     public float jumpForce = 18.0f;
     public float defaultVel = 200.0f;
-    
+
+
     // Animation and sprites
     private AnimationManager animationManager;
     public String direction = "RIGHT";
@@ -52,7 +53,7 @@ public class Robot {
     // Game state
     public boolean gameOverforRobo = false;
     public Tile currentPlatform = null;
-    public float damageInflicted = 50.0f;
+    public float damageInflicted = 30.0f;
 
     public Robot(float x, float y, Color color) {
         this.x = x;
@@ -164,27 +165,21 @@ public class Robot {
     }
 
     public void respawn() {
-    lives--;  // decrement first
-
-    if (lives >= 0) {
-        if (lives == 0) {
-            death();  // last life used → game over
-            return;
+        if (lives > 0) {
+            lives--;
+            health = MAX_HEALTH;
+            x = spawnPosition.getVector2DX();
+            y = spawnPosition.getVector2DY();
+            position.set(spawnPosition);
+            velocity.set(0, 0);
+            velocityY = 0;
+            onGround = false;
+            onSurface = false;
+            isAttacking = false;
+            direction = "RIGHT";
+            animationManager.setState("idle_right");
         }
-
-        health = MAX_HEALTH;
-        x = spawnPosition.getVector2DX();
-        y = spawnPosition.getVector2DY();
-        position.set(spawnPosition);
-        velocity.set(0, 0);
-        velocityY = 0;
-        onGround = false;
-        onSurface = false;
-        isAttacking = false;
-        direction = "RIGHT";
-        animationManager.setState("idle_right");
     }
-}
 
     public void death() {
         x = 0;
@@ -312,27 +307,5 @@ public class Robot {
 
     public boolean isDead() { return health <= 0; }
     public boolean hasLivesRemaining() { return lives > 0; }
-
-    public void reset() {
-    this.lives = MAX_LIVES;
-    this.health = MAX_HEALTH;
-
-    this.gameOverforRobo = false;
-
-    this.x = spawnPosition.getVector2DX();
-    this.y = spawnPosition.getVector2DY();
-    this.position.set(spawnPosition);
-
-    this.velocity.set(0, 0);
-    this.velocityY = 0;
-
-    this.onGround = false;
-    this.onSurface = false;
-
-    this.isAttacking = false;
-
-    this.direction = "RIGHT";
-    animationManager.setState("idle_right");
-}
 }
 

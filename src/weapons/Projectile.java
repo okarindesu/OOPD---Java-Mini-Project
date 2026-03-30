@@ -25,13 +25,6 @@ public class Projectile {
         this.spawnTime = System.currentTimeMillis();
     }
 
-    public void update(float dt) {
-        position.addLocal(new Vector2D(
-                velocity.getVector2DX() * dt,
-                velocity.getVector2DY() * dt
-        ));
-    }
-
     public boolean isExpired() {
         return System.currentTimeMillis() - spawnTime > lifeTime;
     }

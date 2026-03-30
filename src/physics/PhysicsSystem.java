@@ -46,4 +46,15 @@ public class PhysicsSystem {
         ps.update(inputDT);
 
     }
+
+
+    public static void updateProjectilePosition(Projectile p, float dt) {
+        Vector2D displacement = new Vector2D(
+                p.getVelocity().getVector2DX() * dt,
+                p.getVelocity().getVector2DY() * dt
+        );
+        p.getPosition().addLocal(displacement);
+    }
+
+
 }

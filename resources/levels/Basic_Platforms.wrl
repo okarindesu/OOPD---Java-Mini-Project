@@ -1,14 +1,14 @@
 # Simple ground + small moving platform
 
 PARALLAX 0 0 0.01 /backgrounds/level1_bg/L0.png
-PARALLAX 0 0 0.01 /backgrounds/level1_bg/L1.png
+PARALLAX -500 -100 0.01 /backgrounds/level1_bg/L1.png
 PARALLAX 900 150 0.01 /backgrounds/level1_bg/L2.png
 PARALLAX 100 150 0.02 /backgrounds/level1_bg/L3.png
 PARALLAX 800 300 0.02 /backgrounds/level1_bg/L3.png
 PARALLAX 200 150 0.03 /backgrounds/level1_bg/L4.png
 PARALLAX 300 150 0.05 /backgrounds/level1_bg/L5.png
 
-STATIC 0 600 1280 80 /textures/1f.png
+STATIC 190 600 900 40 /textures/1f.png
 STATIC 200 500 200 20 /textures/1f.png
 STATIC 500 400 200 20 /textures/1f.png
 

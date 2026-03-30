@@ -1,0 +1,9 @@
+# Background sky
+PARALLAX 0 0 0.1 /backgrounds/start_screen/1.png
+PARALLAX 0 0 0.1 /backgrounds/start_screen/2.png
+PARALLAX 0 0 0.1 /backgrounds/start_screen/3.png
+PARALLAX 0 0 0.1 /backgrounds/start_screen/4.png
+PARALLAX 0 0 0.1 /backgrounds/start_screen/5.png
+
+
+

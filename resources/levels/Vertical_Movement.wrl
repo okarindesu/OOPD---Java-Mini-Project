@@ -6,10 +6,10 @@ PARALLAX 900 150 0.01 /backgrounds/level2_bg/L2.png
 PARALLAX 100 150 0.02 /backgrounds/level2_bg/L3.png
 PARALLAX 500 150 0.03 /backgrounds/level2_bg/L4.png
 
-STATIC 0 600 1280 80 /textures/1f.png
+STATIC 190 600 900 40 /textures/Level2_ground.png
 
-STATIC 100 500 150 20 /textures/1f.png
-STATIC 400 450 150 20 /textures/1f.png
+STATIC 250 500 150 20 /textures/Level2_tile1.png
+STATIC 600 450 150 20 /textures/Level2_tile1.png
 
-MOVING 250 350 120 15 0 80 0 120 /textures/1f.png
-MOVING 600 300 120 15 0 60 0 100 /textures/1f.png
+MOVING 450 350 120 15 0 80 0 120 /textures/Level2_tile1.png
+MOVING 800 300 120 15 0 60 0 100 /textures/Level2_tile1.png

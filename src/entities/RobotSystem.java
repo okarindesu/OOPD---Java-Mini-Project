@@ -10,16 +10,10 @@ public class RobotSystem {
     public RobotSystem(Robot robot1, Robot robot2) {
         this.robot1 = robot1 ;
         this.robot2 = robot2 ;
-        this.attackRange = 150.0f ;  // Increased from 50 to 150 pixels
+        this.attackRange = 100.0f ;  // Increased from 50 to 150 pixels
     }
 
     public void checkAttacksRobots() {
-        // Don't allow attacks if game is over
-        if (winner != null) return;
-        
-        // Don't allow attacks from robots that are game over
-        if (robot1.gameOverforRobo || robot2.gameOverforRobo) return;
-        
         if(robot1.isAttacking) {
             if(checkIfInAttackRange(robot1, robot2)) robot2.takeDamage(robot1.damageInflicted);
             robot1.isAttacking = false;
@@ -57,18 +51,14 @@ public class RobotSystem {
         return winner;
     }
 
-    public void resetWinner() {
-        winner = null;
-    }
-
     public void checkWinCondition() {
         if(!robot1.hasLivesRemaining() && robot1.isDead()) {
             robot1.gameOverforRobo = true ;
-            winner = "Player 2 Wins !";
+            winner = "Player 2 Wins !!!!";
         }
         else if(!robot2.hasLivesRemaining() && robot2.isDead()) {
             robot2.gameOverforRobo = true ;
-            winner = "Player 1 Wins !";
+            winner = "Player 1 Wins !!!!!";
         }
     }
 }
