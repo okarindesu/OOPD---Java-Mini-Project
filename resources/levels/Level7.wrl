@@ -1,0 +1,13 @@
+PARALLAX 0 0 0.01 /backgrounds/preview/b7.png
+
+STATIC 0 600 1280 80 /textures/1f.png
+
+STATIC 50 520 120 20 /textures/1f.png
+STATIC 1100 520 120 20 /textures/1f.png
+
+MOVING 200 480 120 20 2 0 250 0 /textures/1f.png
+MOVING 500 380 120 20 0 2 0 150 /textures/1f.png
+MOVING 800 300 120 20 2 0 200 0 /textures/1f.png
+
+STATIC 400 200 200 20 /textures/1f.png
+STATIC 700 150 200 20 /textures/1f.png
