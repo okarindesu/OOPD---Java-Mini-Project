@@ -1,7 +1,7 @@
 package entities;
 
-import weapons.MeleeWeapon;
-import weapons.Projectile;
+import Weapons.MeleeWeapon;
+import Weapons.Projectile;
 
 import java.util.Iterator;
 import java.util.List;

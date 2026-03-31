@@ -1,4 +1,4 @@
-package weapons;
+package Weapons;
 
 import entities.Robot;
 import utils.Vector2D;

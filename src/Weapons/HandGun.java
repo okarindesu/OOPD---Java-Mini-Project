@@ -3,30 +3,32 @@ package Weapons;
 import entities.Robot;
 import utils.Vector2D;
 
-public class HandGun {
-    private float bulletVelocity ;
-    private float bulletOffset ;
-    private float bulletDamage ;
-    private ProjectileSystem projectileSystem ;
+public class Handgun extends RangedWeapon {
 
-    public HandGun() {
-        this.bulletVelocity = 400.0f ;
-        this.bulletOffset = 30.0f ;
-        this.bulletDamage = 20.0f ;
-        this.projectileSystem = new ProjectileSystem() ;
+    @Override
+    protected Projectile createProjectile(Vector2D pos, String dir, Robot owner) {
+        float speed = 400f;
+
+        Vector2D vel = new Vector2D(0, 0);
+
+        switch (dir.toLowerCase()) {
+            case "right": vel.set(speed, 0); break;
+            case "left": vel.set(-speed, 0); break;
+            case "up": vel.set(0, -speed); break;
+            case "down": vel.set(0, speed); break;
+        }
+
+        // Spawn from center of sprite (30px offset for 60x60 sprite)
+        Vector2D spawn = new Vector2D(pos.getVector2DX() + 30, pos.getVector2DY() + 30);
+        float offset = 20f;
+
+        switch (dir.toLowerCase()) {
+            case "right": spawn.addLocal(new Vector2D(offset, 0)); break;
+            case "left": spawn.addLocal(new Vector2D(-offset, 0)); break;
+            case "up": spawn.addLocal(new Vector2D(0, -offset)); break;
+            case "down": spawn.addLocal(new Vector2D(0, offset)); break;
+        }
+
+        return new Projectile(spawn, vel, 20f, owner, owner.getProjectileColor());
     }
-
-    public void createProjectile(Vector2D pos , Vector2D roboVel , int dir) {
-        Vector2D vel ;
-        vel = new Vector2D(dir * bulletVelocity , roboVel.getVector2DY()) ;
-
-        Vector2D spawn = new Vector2D(pos.getVector2DX(), pos.getVector2DY()) ;
-        spawn.addLocal(new Vector2D(dir * bulletOffset , bulletOffset));
-
-        projectileSystem.addProjectile(new Projectile(spawn , vel , bulletDamage));
-    }
-
-    public float getBulletDamage() { return this.bulletDamage ; }
-    public float getBulletVelocity() { return this.bulletVelocity ; }
-    public ProjectileSystem getProjectileSystem() { return this.projectileSystem ; }
 }

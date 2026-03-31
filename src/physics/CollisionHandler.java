@@ -1,6 +1,6 @@
 package physics;
 
-import weapons.Projectile;
+import Weapons.Projectile;
 import entities.Level;
 import entities.Robot;
 import entities.Tile;

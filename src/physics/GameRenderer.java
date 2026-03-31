@@ -1,6 +1,6 @@
 package physics;
 
-import weapons.Projectile;
+import Weapons.Projectile;
 import engine.GameState;
 import engine.LevelSelectionContext;
 import entities.*;

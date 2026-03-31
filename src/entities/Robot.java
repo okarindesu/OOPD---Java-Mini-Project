@@ -1,9 +1,9 @@
 package entities;
 
 import java.awt.Color;
-import weapons.Handgun;
-import weapons.MeleeWeapon;
-import weapons.ProjectileSystem;
+import Weapons.Handgun;
+import Weapons.MeleeWeapon;
+import Weapons.ProjectileSystem;
 import utils.Vector2D;
 
 public class Robot {

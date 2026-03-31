@@ -2,18 +2,10 @@ package Weapons;
 
 import entities.Robot;
 
-public class MeleeWeapon {
-    private float meleeDamage ;
+public class MeleeWeapon implements Weapon {
 
-    public MeleeWeapon(float meleeDamage) {
-        this.meleeDamage = meleeDamage ;
-    }
-
-    public void use(Robot robot) {
-        robot.attack() ;
-    }
-
-    public float getMeleeDamage() {
-        return meleeDamage;
+    @Override
+    public void use(Robot user) {
+        user.attack();
     }
 }
