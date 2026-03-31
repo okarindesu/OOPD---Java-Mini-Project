@@ -1,0 +1,15 @@
+# Introduces vertical platforms
+
+PARALLAX 0 0 0.01 /backgrounds/level2_bg/L0.png
+PARALLAX 0 0 0.01 /backgrounds/level2_bg/L1.png
+PARALLAX 900 150 0.01 /backgrounds/level2_bg/L2.png
+PARALLAX 100 150 0.02 /backgrounds/level2_bg/L3.png
+PARALLAX 500 150 0.03 /backgrounds/level2_bg/L4.png
+
+STATIC 0 600 1280 80 /textures/1f.png
+
+STATIC 100 500 150 20 /textures/1f.png
+STATIC 400 450 150 20 /textures/1f.png
+
+MOVING 250 350 120 15 0 80 0 120 /textures/1f.png
+MOVING 600 300 120 15 0 60 0 100 /textures/1f.png

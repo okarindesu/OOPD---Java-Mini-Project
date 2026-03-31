@@ -1,0 +1,7 @@
+PARALLAX 0 0 0.01 /backgrounds/preview/b2.png
+
+STATIC 0 600 1280 80 /textures/1f.png
+STATIC 150 520 150 20 /textures/1f.png
+STATIC 350 460 150 20 /textures/1f.png
+STATIC 550 400 150 20 /textures/1f.png
+STATIC 750 340 150 20 /textures/1f.png
