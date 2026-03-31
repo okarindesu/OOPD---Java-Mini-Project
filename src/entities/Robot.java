@@ -1,7 +1,7 @@
 package entities;
 
 import java.awt.Color;
-import Weapons.Handgun;
+import Weapons.HandGun;
 import Weapons.MeleeWeapon;
 import Weapons.ProjectileSystem;
 import utils.Vector2D;
@@ -16,7 +16,7 @@ public class Robot {
 
     private float roboWidth ;
     private float roboHeight ;
-    private Handgun handGun ;
+    private HandGun handGun ;
     private MeleeWeapon meleeWeapon ;
     private ProjectileSystem projectileSystem ;
     private Color projectileColor ;
@@ -51,7 +51,7 @@ public class Robot {
 
         this.roboWidth = 60 ;
         this.roboHeight = 60 ;
-        this.handGun = new Handgun() ;
+        this.handGun = new HandGun() ;
         this.meleeWeapon = new MeleeWeapon() ;
         this.projectileSystem = new ProjectileSystem();
         this.projectileColor = Color.RED;
@@ -68,7 +68,7 @@ public class Robot {
 
         this.roboWidth = 60 ;
         this.roboHeight = 60 ;
-        this.handGun = new Handgun() ;
+        this.handGun = new HandGun() ;
         this.meleeWeapon = new MeleeWeapon() ;
         this.projectileSystem = new ProjectileSystem();
         this.projectileColor = Color.RED;
@@ -201,7 +201,7 @@ public class Robot {
     public int getDirection() { return this.direction ; }
     public void setDirection(int direction) { this.direction = direction ; }
 
-    public Handgun getHandGun() { return this.handGun ; }
+    public HandGun getHandGun() { return this.handGun ; }
     public MeleeWeapon getMeleeWeapon() { return this.meleeWeapon ; }
     public ProjectileSystem getProjectileSystem() { return this.projectileSystem ; }
     public Color getProjectileColor() { return this.projectileColor ; }

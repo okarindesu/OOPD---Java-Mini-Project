@@ -3,7 +3,7 @@ package Weapons;
 import entities.Robot;
 import utils.Vector2D;
 
-public class Handgun extends RangedWeapon {
+public class HandGun extends RangedWeapon {
 
     @Override
     protected Projectile createProjectile(Vector2D pos, String dir, Robot owner) {
