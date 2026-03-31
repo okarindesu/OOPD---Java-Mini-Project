@@ -20,16 +20,37 @@ public class PlayerController {
         this.input = input ;
     }
 
-    public void control(LevelSelectionContext levelSelectionContext) {
-        GameState gameState = levelSelectionContext.getGameState() ;
+    public void control(StartScreenContext startScreenContext , LevelSelectionContext levelSelectionContext) {
+        GameState gameState = levelSelectionContext.getGameStateHandler().getGameState() ; ;
         switch (gameState) {
+            case START_SCREEN_STATE:
+                controlStartScreenInput(startScreenContext) ;
+                break ;
             case LEVEL_SELECTION_STATE:
                 controlLevelSelectionInput(levelSelectionContext);
-                break;
+                break ;
             case GAME_PLAYING_STATE:
-                controlGameInput();
+                controlGameInput() ;
+                break ;
         }
     }
+
+    private void controlStartScreenInput(StartScreenContext startScreenContext) {
+        if (input.isKeyPressed(KeyEvent.VK_UP)) startScreenContext.moveUp();
+        if (input.isKeyPressed(KeyEvent.VK_DOWN)) startScreenContext.moveDown();
+
+        if (input.isKeyPressed(KeyEvent.VK_ENTER)) {
+            startScreenContext.select();
+            if(startScreenContext.isStartPressed()) {
+                GameStateHandler gameStateHandler = startScreenContext.getGameHandler() ;
+                gameStateHandler.setGameState(GameState.LEVEL_SELECTION_STATE) ;
+            }
+            else if(startScreenContext.isQuitPressed()) {
+                System.exit(0) ;
+            }
+        }
+    }
+
 
     private void controlLevelSelectionInput(LevelSelectionContext ctx) {
 
@@ -79,7 +100,8 @@ public class PlayerController {
         if (input.isKeyPressed(KeyEvent.VK_ENTER)) {
             LevelInfo[] levels = ctx.getLevels();
             ctx.setLevel(LevelLoader.loadlevel(levels[newIndex].getFilePath()));
-            ctx.setGameState(GameState.GAME_PLAYING_STATE);
+            GameStateHandler gameStateHandler = ctx.getGameStateHandler() ;
+            gameStateHandler.setGameState(GameState.GAME_PLAYING_STATE) ;
         }
     }
 

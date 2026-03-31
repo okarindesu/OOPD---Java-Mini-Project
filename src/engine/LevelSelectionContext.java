@@ -4,20 +4,20 @@ import entities.Level;
 import entities.LevelInfo;
 
 public class LevelSelectionContext {
-    private GameState gameState ;
+    private GameStateHandler gameStateHandler ;
     private int selectedLevel ;
     private LevelInfo[] levels ;
     private Level level ;
 
-    public LevelSelectionContext(GameState gameState , LevelInfo[] levels , int selectedLevel) {
-        this.gameState = gameState ;
+    public LevelSelectionContext(GameStateHandler gameStateHandler , LevelInfo[] levels , int selectedLevel) {
+        this.gameStateHandler = gameStateHandler ;
         this.levels = levels ;
         this.level = null ;
         this.selectedLevel = selectedLevel ;
     }
 
-    public GameState getGameState() { return gameState; }
-    public void setGameState(GameState gameState) { this.gameState = gameState; }
+    public GameStateHandler getGameStateHandler() { return gameStateHandler ; }
+    public void setGameStateHandler(GameStateHandler gameStateHandler) { this.gameStateHandler = gameStateHandler; }
 
     public int getSelectedLevel() { return selectedLevel; }
     public void setSelectedLevel(int selectedLevel) { this.selectedLevel = selectedLevel; }

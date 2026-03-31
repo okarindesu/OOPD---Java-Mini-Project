@@ -31,7 +31,9 @@ public class GameLoop extends Canvas implements Runnable {
     private CollisionResolver collisionResolver ;
     private Camera camera ;
     private AnimationInitializer animationInitializer ;
+    private GameStateHandler gameStateHandler ;
     private LevelSelectionContext levelSelectionContext ;
+    private StartScreenContext startScreenContext ;
 
     private int selectedLevel = 0 ;
     private LevelInfo[] levels ;
@@ -104,7 +106,9 @@ public class GameLoop extends Canvas implements Runnable {
                 ),
         };
 
-        levelSelectionContext = new LevelSelectionContext(GameState.LEVEL_SELECTION_STATE , levels , selectedLevel) ;
+        gameStateHandler = new GameStateHandler(GameState.START_SCREEN_STATE) ;
+        levelSelectionContext = new LevelSelectionContext(gameStateHandler , levels , selectedLevel) ;
+        startScreenContext = new StartScreenContext(gameStateHandler) ;
     }
 
     private BufferedImage loadImage(String path) {
@@ -158,8 +162,11 @@ public class GameLoop extends Canvas implements Runnable {
             lastTime = now ;
 
             while(delta >= 1) {
-                GameState gameState = levelSelectionContext.getGameState() ;
+                GameState gameState = gameStateHandler.getGameState() ;
                 switch(gameState) {
+                    case START_SCREEN_STATE:
+                        updateStartScreen(startScreenContext) ;
+                        break ;
                     case LEVEL_SELECTION_STATE :
                         updateLevelSelection(levelSelectionContext);
                         break;
@@ -169,14 +176,19 @@ public class GameLoop extends Canvas implements Runnable {
                 }
                 delta-- ;
             }
-            /*switch render logic */
-            gameRenderer.render(levelSelectionContext , robot1 , robot2 , camera) ;
+            gameRenderer.render(startScreenContext , levelSelectionContext , robot1 , robot2 , camera) ;
         }
         stop() ;
     }
 
+    private void updateStartScreen(StartScreenContext startScreenContext) {
+        playerController.control(startScreenContext , levelSelectionContext) ;
+        if(startScreenContext.isStartPressed()) levelSelectionContext.getGameStateHandler().setGameState(GameState.LEVEL_SELECTION_STATE) ;
+        if(startScreenContext.isQuitPressed()) stop() ;
+    }
+
     private void updateGame(LevelSelectionContext levelSelectionContext) {
-        playerController.control(levelSelectionContext) ;
+        playerController.control(startScreenContext , levelSelectionContext) ;
         collisionHandler.handleCollisions(collisionResolver , levelSelectionContext.getLevel() , robot1 , robot2 , WIDTH , HEIGHT) ;
 
         robot1.updateAnimation();
@@ -191,6 +203,6 @@ public class GameLoop extends Canvas implements Runnable {
     }
 
     private void updateLevelSelection(LevelSelectionContext levelSelectionContext) {
-        playerController.control(levelSelectionContext) ;
+        playerController.control(startScreenContext , levelSelectionContext) ;
     }
 }
