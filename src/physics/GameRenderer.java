@@ -52,7 +52,7 @@ public class GameRenderer {
         }
     }
 
-    public void render(StartScreenContext startScreenContext , LevelSelectionContext levelSelectionContext , GameOverContext gameOverContext , Robot robot1 , Robot robot2 , Camera camera) {
+    public void render(StartScreenContext startScreenContext , LevelSelectionContext levelSelectionContext , GameOverContext gameOverContext , Robot robot1 , Robot robot2 , Camera camera, PowerUpSystem powerUpSystem) {
         BufferStrategy bs = canvas.getBufferStrategy() ;
         if (bs == null) return ;
         Graphics g = bs.getDrawGraphics() ;
@@ -66,7 +66,7 @@ public class GameRenderer {
                 levelSelectionRender(g , levelSelectionContext) ;
                 break;
             case GAME_PLAYING_STATE:
-                gameRender(g , robot1 , robot2 , levelSelectionContext.getLevel() , camera) ;
+                gameRender(g , robot1 , robot2 , levelSelectionContext.getLevel() , camera, powerUpSystem) ;
                 break;
             case GAME_OVER_STATE:
                 gameOverRender(g , gameOverContext);
@@ -459,7 +459,7 @@ public class GameRenderer {
         g.drawString(enter, enterTextX, y + 22);
     }
 
-    private void gameRender(Graphics g , Robot robot1 , Robot robot2 , Level level , Camera camera) {
+    private void gameRender(Graphics g , Robot robot1 , Robot robot2 , Level level , Camera camera, PowerUpSystem powerUpSystem) {
         camera.setCameraX(robot1.getPosition().getVector2DX() - width / 2) ;
         camera.setCameraY(robot1.getPosition().getVector2DY() - height / 2) ;
 
@@ -471,10 +471,30 @@ public class GameRenderer {
         drawRobot(g , robot2 , Color.CYAN) ;
         drawProjectiles(g , robot1) ;
         drawProjectiles(g , robot2) ;
+        drawPowerUps(g, powerUpSystem.getPowerUps());
         drawUI(g , robot1 , robot2) ;
 
         g.setColor(Color.WHITE) ;
         g.drawString("RoboWars" , 10 , 20) ;
+    }
+
+    private void drawPowerUps(Graphics g, List<PowerUp> powerUps) {
+        for (PowerUp powerUp : powerUps) {
+            int x = (int) powerUp.getPosition().getVector2DX();
+            int y = (int) powerUp.getPosition().getVector2DY();
+            int w = (int) powerUp.getWidth();
+            int h = (int) powerUp.getHeight();
+
+            if (powerUp.getType() == PowerUpType.SPEED_BOOST) {
+                g.setColor(new Color(66, 245, 164)); // Green for speed
+            } else {
+                g.setColor(new Color(255, 170, 0)); // Orange for damage
+            }
+
+            g.fillOval(x, y, w, h);
+            g.setColor(Color.WHITE);
+            g.drawOval(x, y, w, h);
+        }
     }
 
     private void drawProjectiles(Graphics g , Robot robot) {

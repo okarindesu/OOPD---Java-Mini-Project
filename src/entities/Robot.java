@@ -33,6 +33,9 @@ public class Robot {
     private static final float ATTACK_DAMAGE = 20.0f ;
     private static final float MAX_HEALTH = 100.0f ;
     private static final int MAX_LIVES = 3 ;
+    private static final float BASE_MOVE_SPEED = 200.0f;
+    private static final float BASE_MELEE_DAMAGE = 40.0f;
+    private static final float BASE_BULLET_DAMAGE = 20.0f;
 
     public boolean isHit = false ;
     public long hitTime = 0 ;
@@ -169,11 +172,24 @@ public class Robot {
         this.isHit = false;
         this.roboWidth = 60;
         this.roboHeight = 60;
+        this.defaultVel = BASE_MOVE_SPEED;
+        this.meleeDamage = BASE_MELEE_DAMAGE;
         this.handGun = new HandGun();
+        this.handGun.setBulletDamage(BASE_BULLET_DAMAGE);
         this.meleeWeapon = new MeleeWeapon(meleeDamage);
         this.direction = 1;
         this.animationManager.setDirection("right");
         this.animationManager.setState("idle_right");
+    }
+
+    public void applySpeedMultiplier(float multiplier) {
+        this.defaultVel *= multiplier;
+    }
+
+    public void applyDamageBonus(float bonusDamage) {
+        this.meleeDamage += bonusDamage;
+        this.meleeWeapon.setMeleeDamage(this.meleeDamage);
+        this.handGun.setBulletDamage(this.handGun.getBulletDamage() + bonusDamage);
     }
 
     public void updateAnimation() {

@@ -27,6 +27,7 @@ public class HandGun {
     }
 
     public float getBulletDamage() { return this.bulletDamage ; }
+    public void setBulletDamage(float bulletDamage) { this.bulletDamage = bulletDamage ; }
     public float getBulletVelocity() { return this.bulletVelocity ; }
     public ProjectileSystem getProjectileSystem() { return this.projectileSystem ; }
 }

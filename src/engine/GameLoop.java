@@ -31,6 +31,7 @@ public class GameLoop extends Canvas implements Runnable {
     private CollisionHandler collisionHandler ;
     private CollisionResolver collisionResolver ;
     private Camera camera ;
+    private PowerUpSystem powerUpSystem;
     private AnimationInitializer animationInitializer ;
     private GameStateHandler gameStateHandler ;
     private LevelSelectionContext levelSelectionContext ;
@@ -66,6 +67,7 @@ public class GameLoop extends Canvas implements Runnable {
 
         collisionHandler = new CollisionHandler() ;
         collisionResolver = new CollisionResolver() ;
+        powerUpSystem = new PowerUpSystem();
 
         animationInitializer = new AnimationInitializer(robot1.getAnimationManager() , robot2.getAnimationManager()) ;
         animationInitializer.initializeRoboAnimation();
@@ -189,7 +191,7 @@ public class GameLoop extends Canvas implements Runnable {
                 }
                 delta-- ;
             }
-            gameRenderer.render(startScreenContext , levelSelectionContext , gameOverContext , robot1 , robot2 , camera) ;
+            gameRenderer.render(startScreenContext , levelSelectionContext , gameOverContext , robot1 , robot2 , camera, powerUpSystem) ;
         }
         stop() ;
     }
@@ -211,6 +213,7 @@ public class GameLoop extends Canvas implements Runnable {
         robotSystem.checkShootingRobots();
         robotSystem.checkAttacksRobots();
         robotSystem.checkRespawns();
+        powerUpSystem.update(levelSelectionContext.getLevel(), robot1, robot2, WIDTH);
         GameOverState result = robotSystem.checkWinCondition();
         if (result != GameOverState.NONE) {
             gameOverContext.setGameOverState(result);
@@ -243,5 +246,6 @@ public class GameLoop extends Canvas implements Runnable {
     private void resetForReplay() {
         robot1.resetForNewGame();
         robot2.resetForNewGame();
+        powerUpSystem.reset();
     }
 }

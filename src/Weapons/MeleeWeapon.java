@@ -16,4 +16,8 @@ public class MeleeWeapon {
     public float getMeleeDamage() {
         return meleeDamage;
     }
+
+    public void setMeleeDamage(float meleeDamage) {
+        this.meleeDamage = meleeDamage;
+    }
 }
