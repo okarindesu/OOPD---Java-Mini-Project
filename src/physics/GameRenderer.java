@@ -1,6 +1,7 @@
 package physics;
 
 import Weapons.Projectile;
+import engine.GameOverContext;
 import engine.GameState;
 import engine.LevelSelectionContext;
 import engine.StartScreenContext;
@@ -51,7 +52,7 @@ public class GameRenderer {
         }
     }
 
-    public void render(StartScreenContext startScreenContext , LevelSelectionContext levelSelectionContext , Robot robot1 , Robot robot2 , Camera camera) {
+    public void render(StartScreenContext startScreenContext , LevelSelectionContext levelSelectionContext , GameOverContext gameOverContext , Robot robot1 , Robot robot2 , Camera camera) {
         BufferStrategy bs = canvas.getBufferStrategy() ;
         if (bs == null) return ;
         Graphics g = bs.getDrawGraphics() ;
@@ -66,6 +67,9 @@ public class GameRenderer {
                 break;
             case GAME_PLAYING_STATE:
                 gameRender(g , robot1 , robot2 , levelSelectionContext.getLevel() , camera) ;
+                break;
+            case GAME_OVER_STATE:
+                gameOverRender(g , gameOverContext);
                 break;
         }
         g.dispose() ;
@@ -164,6 +168,92 @@ public class GameRenderer {
         x += plusW + gap;
 
         // ===== ENTER BOX =====
+        g.drawRect(x, y, enterW, boxHeightCtrl);
+        int enterTextX = x + (enterW - fm.stringWidth(enter)) / 2;
+        g.drawString(enter, enterTextX, y + 22);
+    }
+
+    private void gameOverRender(Graphics g, GameOverContext context) {
+        String[] options = context.getOptions();
+        int selected = context.getSelectedIndex();
+
+        Graphics2D g2 = (Graphics2D) g;
+
+        g.setColor(Color.BLACK);
+        g.fillRect(0, 0, width, height);
+
+        g.setFont(bigTitle);
+        g.setColor(Color.WHITE);
+
+        String title = "Game Over";
+        int titleWidth = g.getFontMetrics().stringWidth(title);
+        g.drawString(title, (width - titleWidth) / 2, 120);
+
+        String winner = context.getWinnerText();
+        if (!winner.isEmpty()) {
+            g.setFont(mediumUI);
+            int winnerWidth = g.getFontMetrics().stringWidth(winner);
+            g.drawString(winner, (width - winnerWidth) / 2, 170);
+        }
+
+        int btnW = 320;
+        int btnH = 70;
+        int centerX = width / 2;
+        int startY = height / 2 - 40;
+        int spacing = 100;
+
+        for (int i = 0; i < options.length; i++) {
+            int y = startY + i * spacing;
+            drawPixelButton(
+                    g2,
+                    centerX - btnW / 2,
+                    y,
+                    btnW,
+                    btnH,
+                    options[i],
+                    i == selected
+            );
+        }
+
+        g.setFont(smallUI);
+        String label = "SELECT :";
+        String movement = "UP / DOWN";
+        String plus = "+";
+        String enter = "ENTER";
+
+        int padding = 12;
+        int boxHeightCtrl = 32;
+        int gap = 15;
+
+        FontMetrics fm = g.getFontMetrics();
+
+        int labelWidth = fm.stringWidth(label);
+
+        int moveW = fm.stringWidth(movement) + padding * 2;
+        int plusW = fm.stringWidth(plus) + padding * 2;
+        int enterW = fm.stringWidth(enter) + padding * 2;
+
+        int totalWidth = labelWidth + 20 + moveW + gap + plusW + gap + enterW;
+
+        int x = (width - totalWidth) / 2;
+        int y = height - 70;
+
+        g.setColor(Color.WHITE);
+        g.drawString(label, x, y + 22);
+        x += labelWidth + 20;
+
+        g.drawRect(x, y, moveW, boxHeightCtrl);
+        int moveTextX = x + (moveW - fm.stringWidth(movement)) / 2;
+        g.drawString(movement, moveTextX, y + 22);
+
+        x += moveW + gap;
+
+        g.drawRect(x, y, plusW, boxHeightCtrl);
+        int plusTextX = x + (plusW - fm.stringWidth(plus)) / 2;
+        g.drawString(plus, plusTextX, y + 22);
+
+        x += plusW + gap;
+
         g.drawRect(x, y, enterW, boxHeightCtrl);
         int enterTextX = x + (enterW - fm.stringWidth(enter)) / 2;
         g.drawString(enter, enterTextX, y + 22);

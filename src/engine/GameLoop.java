@@ -9,6 +9,7 @@ import physics.PhysicsSystem;
 import utils.Vector2D;
 
 import javax.imageio.ImageIO;
+import javax.swing.SwingUtilities;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -34,6 +35,7 @@ public class GameLoop extends Canvas implements Runnable {
     private GameStateHandler gameStateHandler ;
     private LevelSelectionContext levelSelectionContext ;
     private StartScreenContext startScreenContext ;
+    private GameOverContext gameOverContext;
 
     private int selectedLevel = 0 ;
     private LevelInfo[] levels ;
@@ -109,6 +111,7 @@ public class GameLoop extends Canvas implements Runnable {
         gameStateHandler = new GameStateHandler(GameState.START_SCREEN_STATE) ;
         levelSelectionContext = new LevelSelectionContext(gameStateHandler , levels , selectedLevel) ;
         startScreenContext = new StartScreenContext(gameStateHandler) ;
+        gameOverContext = new GameOverContext(gameStateHandler);
     }
 
     private BufferedImage loadImage(String path) {
@@ -147,6 +150,13 @@ public class GameLoop extends Canvas implements Runnable {
         } catch (InterruptedException e) {
             e.printStackTrace() ;
         }
+        // Try to close the window that contains this canvas
+        java.awt.Window window = SwingUtilities.getWindowAncestor(this);
+        if (window != null) {
+            window.dispose();
+        }
+        // Ensure JVM exits in case other threads are still alive
+        System.exit(0);
     }
 
     @Override
@@ -173,22 +183,25 @@ public class GameLoop extends Canvas implements Runnable {
                     case GAME_PLAYING_STATE:
                         updateGame(levelSelectionContext);
                         break;
+                    case GAME_OVER_STATE:
+                        updateGameOver();
+                        break;
                 }
                 delta-- ;
             }
-            gameRenderer.render(startScreenContext , levelSelectionContext , robot1 , robot2 , camera) ;
+            gameRenderer.render(startScreenContext , levelSelectionContext , gameOverContext , robot1 , robot2 , camera) ;
         }
         stop() ;
     }
 
     private void updateStartScreen(StartScreenContext startScreenContext) {
-        playerController.control(startScreenContext , levelSelectionContext) ;
+        playerController.control(startScreenContext , levelSelectionContext , gameOverContext) ;
         if(startScreenContext.isStartPressed()) levelSelectionContext.getGameStateHandler().setGameState(GameState.LEVEL_SELECTION_STATE) ;
         if(startScreenContext.isQuitPressed()) stop() ;
     }
 
     private void updateGame(LevelSelectionContext levelSelectionContext) {
-        playerController.control(startScreenContext , levelSelectionContext) ;
+        playerController.control(startScreenContext , levelSelectionContext , gameOverContext) ;
         collisionHandler.handleCollisions(collisionResolver , levelSelectionContext.getLevel() , robot1 , robot2 , WIDTH , HEIGHT) ;
 
         robot1.updateAnimation();
@@ -198,11 +211,37 @@ public class GameLoop extends Canvas implements Runnable {
         robotSystem.checkShootingRobots();
         robotSystem.checkAttacksRobots();
         robotSystem.checkRespawns();
-        robotSystem.checkWinCondition();
+        GameOverState result = robotSystem.checkWinCondition();
+        if (result != GameOverState.NONE) {
+            gameOverContext.setGameOverState(result);
+            gameStateHandler.setGameState(GameState.GAME_OVER_STATE);
+        }
         physicsSystem.update(robot1 , robot2 , levelSelectionContext.getLevel()) ;
     }
 
     private void updateLevelSelection(LevelSelectionContext levelSelectionContext) {
-        playerController.control(startScreenContext , levelSelectionContext) ;
+        playerController.control(startScreenContext , levelSelectionContext , gameOverContext) ;
+    }
+
+    private void updateGameOver() {
+        playerController.control(startScreenContext , levelSelectionContext , gameOverContext) ;
+
+        if (gameOverContext.isReplayPressed()) {
+            resetForReplay();
+            gameOverContext.resetActions();
+            gameStateHandler.setGameState(GameState.GAME_PLAYING_STATE);
+        } else if (gameOverContext.isLevelSelectPressed()) {
+            resetForReplay();
+            gameOverContext.resetActions();
+            gameStateHandler.setGameState(GameState.LEVEL_SELECTION_STATE);
+        } else if (gameOverContext.isQuitPressed()) {
+            // Mirror main menu quit behavior: exit immediately
+            System.exit(0);
+        }
+    }
+
+    private void resetForReplay() {
+        robot1.resetForNewGame();
+        robot2.resetForNewGame();
     }
 }

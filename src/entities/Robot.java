@@ -157,6 +157,25 @@ public class Robot {
         health = 0.0f;
     }
 
+    public void resetForNewGame() {
+        this.health = MAX_HEALTH;
+        this.lives = MAX_LIVES;
+        this.position.set(spawnPosition);
+        this.velocity.set(0, 0);
+        this.onSurface = false;
+        this.isAttacking = false;
+        this.isShooting = false;
+        this.gameOverforRobo = false;
+        this.isHit = false;
+        this.roboWidth = 60;
+        this.roboHeight = 60;
+        this.handGun = new HandGun();
+        this.meleeWeapon = new MeleeWeapon(meleeDamage);
+        this.direction = 1;
+        this.animationManager.setDirection("right");
+        this.animationManager.setState("idle_right");
+    }
+
     public void updateAnimation() {
         if(animationManager != null) animationManager.update() ;
     }

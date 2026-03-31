@@ -13,6 +13,7 @@ public class PlayerController {
     private Robot robot1 ;
     private Robot robot2 ;
     private InputHandler input ;
+    private GameOverContext gameOverContext;
 
     public PlayerController(Robot robot1 , Robot robot2 , InputHandler input) {
         this.robot1 = robot1 ;
@@ -20,7 +21,8 @@ public class PlayerController {
         this.input = input ;
     }
 
-    public void control(StartScreenContext startScreenContext , LevelSelectionContext levelSelectionContext) {
+    public void control(StartScreenContext startScreenContext , LevelSelectionContext levelSelectionContext , GameOverContext gameOverContext) {
+        this.gameOverContext = gameOverContext;
         GameState gameState = levelSelectionContext.getGameStateHandler().getGameState() ; ;
         switch (gameState) {
             case START_SCREEN_STATE:
@@ -32,6 +34,9 @@ public class PlayerController {
             case GAME_PLAYING_STATE:
                 controlGameInput() ;
                 break ;
+            case GAME_OVER_STATE:
+                controlGameOverInput();
+                break;
         }
     }
 
@@ -114,8 +119,7 @@ public class PlayerController {
 
         if(input.isKeyPressed((KeyEvent.VK_Q))) robot1.shoot();
         else if(robot1.getAnimationManager().isAttackFinished()) robot1.idle();
-
-        if(input.isKeyPressed(KeyEvent.VK_E)) robot1.attack(); ;
+        // Sword option removed for player 1 – E does nothing now
 
         if(input.isKeyPressed(KeyEvent.VK_LEFT)) robot2.moveLeft();
         else if(input.isKeyPressed(KeyEvent.VK_RIGHT)) robot2.moveRight();
@@ -123,9 +127,22 @@ public class PlayerController {
 
         if(input.isKeyPressed(KeyEvent.VK_UP)) robot2.jump() ;
 
-        if(input.isKeyPressed(KeyEvent.VK_SPACE)) robot2.shoot();
-        else if (robot2.getAnimationManager().isAttackFinished()) robot2.idle() ;
+        // Green robot (player 2) should use melee sword, not handgun
+        if(input.isKeyPressed(KeyEvent.VK_SPACE) || input.isKeyPressed(KeyEvent.VK_NUMPAD0)) {
+            robot2.attack();
+        } else if (robot2.getAnimationManager().isAttackFinished()) {
+            robot2.idle() ;
+        }
+    }
 
-        if(input.isKeyPressed(KeyEvent.VK_NUMPAD0)) robot2.attack();
+    private void controlGameOverInput() {
+        if (gameOverContext == null) return;
+
+        if (input.isKeyPressed(KeyEvent.VK_UP)) gameOverContext.moveUp();
+        if (input.isKeyPressed(KeyEvent.VK_DOWN)) gameOverContext.moveDown();
+
+        if (input.isKeyPressed(KeyEvent.VK_ENTER)) {
+            gameOverContext.select();
+        }
     }
 }
