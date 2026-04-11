@@ -38,8 +38,10 @@ public class GameLoop extends Canvas implements Runnable {
     private StartScreenContext startScreenContext ;
     private GameOverContext gameOverContext;
 
+
     private static float BGMMUSIC = 0.25f ;
     private static float SFXMUSIC = 8.00f ;
+
 
     private int selectedLevel = 0 ;
     private LevelInfo[] levels ;
@@ -203,6 +205,9 @@ public class GameLoop extends Canvas implements Runnable {
                             break;
 
                         case GAME_PLAYING_STATE:
+                            if (previousState == GameState.LEVEL_SELECTION_STATE) {
+                                powerUpSystem.reset();
+                            }
                             MusicPlayer.play("resources/sounds/gameplay_ost.wav");
                             break;
 
@@ -251,7 +256,7 @@ public class GameLoop extends Canvas implements Runnable {
         robotSystem.checkShootingRobots();
         robotSystem.checkAttacksRobots();
         robotSystem.checkRespawns();
-        powerUpSystem.update(levelSelectionContext.getLevel(), robot1, robot2, WIDTH);
+        powerUpSystem.update(levelSelectionContext.getLevel(), robot1, robot2);
         GameOverState result = robotSystem.checkWinCondition();
         if (result != GameOverState.NONE) {
             gameOverContext.setGameOverState(result);

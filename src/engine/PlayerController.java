@@ -2,42 +2,43 @@ package engine;
 
 import entities.*;
 import utils.Vector2D;
-
 import java.awt.event.KeyEvent;
 import java.util.List;
 
 public class PlayerController {
-    private Robot robot1 ;
-    private Robot robot2 ;
-    private InputHandler input ;
+    private Robot robot1;
+    private Robot robot2;
+    private InputHandler input;
     private GameOverContext gameOverContext;
+
     private long lastStartScreenInputTime = 0;
-    private static final long START_SCREEN_COOLDOWN = 200; // milliseconds
+    private static final long START_SCREEN_COOLDOWN = 200; 
     private long lastLevelSelectInputTime = 0;
-    private static final long LEVEL_SELECT_COOLDOWN = 200; // milliseconds
+    private static final long LEVEL_SELECT_COOLDOWN = 200; 
     private long lastGameOverInputTime = 0;
-    private static final long GAME_OVER_COOLDOWN = 200; // milliseconds
+    private static final long GAME_OVER_COOLDOWN = 200; 
     private boolean enterWasPressed = false;
 
-    public PlayerController(Robot robot1 , Robot robot2 , InputHandler input) {
-        this.robot1 = robot1 ;
-        this.robot2 = robot2 ;
-        this.input = input ;
+    public PlayerController(Robot robot1, Robot robot2, InputHandler input) {
+        this.robot1 = robot1;
+        this.robot2 = robot2;
+        this.input = input;
     }
 
-    public void control(StartScreenContext startScreenContext , LevelSelectionContext levelSelectionContext , GameOverContext gameOverContext) {
+    public void control(StartScreenContext startScreenContext, LevelSelectionContext levelSelectionContext, GameOverContext gameOverContext) {
         this.gameOverContext = gameOverContext;
-        GameState gameState = levelSelectionContext.getGameStateHandler().getGameState() ; ;
+        GameState gameState = levelSelectionContext.getGameStateHandler().getGameState();
+        
         switch (gameState) {
             case START_SCREEN_STATE:
-                controlStartScreenInput(startScreenContext) ;
-                break ;
+                controlStartScreenInput(startScreenContext);
+                break;
             case LEVEL_SELECTION_STATE:
                 controlLevelSelectionInput(levelSelectionContext);
-                break ;
+                break;
             case GAME_PLAYING_STATE:
-                controlGameInput() ;
-                break ;
+                controlGameInput();
+                break;
             case GAME_OVER_STATE:
                 controlGameOverInput();
                 break;
@@ -64,26 +65,20 @@ public class PlayerController {
                 SoundManager.play("select_ui");
                 startScreenContext.select();
                 if(startScreenContext.isStartPressed()) {
-                    GameStateHandler gameStateHandler = startScreenContext.getGameHandler() ;
-                    gameStateHandler.setGameState(GameState.LEVEL_SELECTION_STATE) ;
-                }
-                else if(startScreenContext.isQuitPressed()) {
-                    System.exit(0) ;
+                    startScreenContext.getGameHandler().setGameState(GameState.LEVEL_SELECTION_STATE);
+                } else if(startScreenContext.isQuitPressed()) {
+                    System.exit(0);
                 }
                 lastStartScreenInputTime = currentTime;
             }
         }
-
         enterWasPressed = input.isKeyPressed(KeyEvent.VK_ENTER);
     }
 
-
     private void controlLevelSelectionInput(LevelSelectionContext ctx) {
-
         int total = ctx.getLevels().length;
         int selected = ctx.getSelectedLevel();
-
-        int columns = 4; // SAME as render
+        int columns = 4; 
         int rows = (int) Math.ceil((double) total / columns);
 
         int row = selected / columns;
@@ -93,14 +88,11 @@ public class PlayerController {
         boolean canMove = (currentTime - lastLevelSelectInputTime) >= LEVEL_SELECT_COOLDOWN;
 
         if (canMove) {
-            // ===== MOVEMENT =====
             if (input.isKeyPressed(KeyEvent.VK_LEFT)) {
                 SoundManager.play("move_ui");
                 col--;
                 lastLevelSelectInputTime = currentTime;
-            }
-
-            if (input.isKeyPressed(KeyEvent.VK_RIGHT)) {
+            } else if (input.isKeyPressed(KeyEvent.VK_RIGHT)) {
                 SoundManager.play("move_ui");
                 col++;
                 lastLevelSelectInputTime = currentTime;
@@ -110,38 +102,29 @@ public class PlayerController {
                 SoundManager.play("move_ui");
                 row--;
                 lastLevelSelectInputTime = currentTime;
-            }
-
-            if (input.isKeyPressed(KeyEvent.VK_DOWN)) {
+            } else if (input.isKeyPressed(KeyEvent.VK_DOWN)) {
                 SoundManager.play("move_ui");
                 row++;
                 lastLevelSelectInputTime = currentTime;
             }
         }
 
-        // ===== CLAMP VALUES =====
+        // Clamp values
         if (col < 0) col = 0;
         if (col >= columns) col = columns - 1;
-
         if (row < 0) row = 0;
         if (row >= rows) row = rows - 1;
 
         int newIndex = row * columns + col;
-
-        // Handle incomplete last row
-        if (newIndex >= total) {
-            newIndex = total - 1;
-        }
+        if (newIndex >= total) newIndex = total - 1;
 
         ctx.setSelectedLevel(newIndex);
 
-        // ===== ENTER =====
         if (!enterWasPressed && input.isKeyPressed(KeyEvent.VK_ENTER) && canMove) {
             SoundManager.play("select_ui");
             LevelInfo[] levels = ctx.getLevels();
             ctx.setLevel(LevelLoader.loadlevel(levels[newIndex].getFilePath()));
-            GameStateHandler gameStateHandler = ctx.getGameStateHandler() ;
-            gameStateHandler.setGameState(GameState.GAME_PLAYING_STATE) ;
+            ctx.getGameStateHandler().setGameState(GameState.GAME_PLAYING_STATE);
             lastLevelSelectInputTime = currentTime;
         }
 
@@ -149,35 +132,32 @@ public class PlayerController {
     }
 
     private void controlGameInput() {
+        // --- Player 1 (Robot 1) ---
         if(input.isKeyPressed(KeyEvent.VK_A)) robot1.moveLeft();
         else if(input.isKeyPressed(KeyEvent.VK_D)) robot1.moveRight();
         else if(!robot1.getAnimationManager().isAttackAnimating()) robot1.idle();
 
-        if(input.isKeyPressed(KeyEvent.VK_W)) robot1.jump() ;
+        if(input.isKeyPressed(KeyEvent.VK_W)) robot1.jump();
 
-        if(input.isKeyPressed((KeyEvent.VK_Q))) robot1.shoot();
-        else if(robot1.getAnimationManager().isAttackFinished()) robot1.idle();
-
-        if(input.isKeyPressed(KeyEvent.VK_E)) {
+        if(input.isKeyPressed(KeyEvent.VK_Q)) {
+            robot1.shoot();
+        } else if(input.isKeyPressed(KeyEvent.VK_E)) {
             robot1.attack();
-        } else if (robot1.getAnimationManager().isAttackFinished()) {
-            robot1.idle() ;
         }
 
+        // --- Player 2 (Robot 2) ---
         if(input.isKeyPressed(KeyEvent.VK_LEFT)) robot2.moveLeft();
         else if(input.isKeyPressed(KeyEvent.VK_RIGHT)) robot2.moveRight();
         else if(!robot2.getAnimationManager().isAttackAnimating()) robot2.idle();
 
-        if(input.isKeyPressed(KeyEvent.VK_UP)) robot2.jump() ;
+        if(input.isKeyPressed(KeyEvent.VK_UP)) robot2.jump();
 
+        // P2 Space/Numpad0 logic
         if(input.isKeyPressed(KeyEvent.VK_SPACE)) {
             robot2.attack();
-        } else if (robot2.getAnimationManager().isAttackFinished()) {
-            robot2.idle() ;
+        } else if(input.isKeyPressed(KeyEvent.VK_NUMPAD0)) {
+            robot2.shoot();
         }
-
-        if(input.isKeyPressed((KeyEvent.VK_NUMPAD0))) robot2.shoot();
-        else if(robot2.getAnimationManager().isAttackFinished()) robot2.idle();
     }
 
     private void controlGameOverInput() {
@@ -191,8 +171,7 @@ public class PlayerController {
                 SoundManager.play("move_ui");
                 gameOverContext.moveUp();
                 lastGameOverInputTime = currentTime;
-            }
-            if (input.isKeyPressed(KeyEvent.VK_DOWN)) {
+            } else if (input.isKeyPressed(KeyEvent.VK_DOWN)) {
                 SoundManager.play("move_ui");
                 gameOverContext.moveDown();
                 lastGameOverInputTime = currentTime;
@@ -204,7 +183,6 @@ public class PlayerController {
                 lastGameOverInputTime = currentTime;
             }
         }
-
         enterWasPressed = input.isKeyPressed(KeyEvent.VK_ENTER);
     }
 }

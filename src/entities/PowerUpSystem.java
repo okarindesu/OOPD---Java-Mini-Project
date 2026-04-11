@@ -9,21 +9,33 @@ public class PowerUpSystem {
     private static final float FALL_SPEED = 190.0f;
     private static final float SPAWN_Y = -40.0f;
     private static final long SPAWN_INTERVAL_MS = 15000;
+    private static final int MAX_POWER_UPS_PER_LEVEL = 2;
+    /** Floor segments use tall colliders (e.g. 80px); thin platforms stay below this. */
+    private static final float GROUND_MIN_TILE_HEIGHT = 45.0f;
+    private static final float SPAWN_X_MARGIN = 8.0f;
+    private static final float POWERUP_WIDTH = 26.0f;
 
     private final List<PowerUp> powerUps;
     private final Random random;
     private long nextSpawnAt;
+    private int spawnedThisLevel;
 
     public PowerUpSystem() {
         this.powerUps = new ArrayList<>();
         this.random = new Random();
+        this.spawnedThisLevel = 0;
         scheduleNextSpawn();
     }
 
-    public void update(Level level, Robot robot1, Robot robot2, int worldWidth) {
+    public void update(Level level, Robot robot1, Robot robot2) {
         long now = System.currentTimeMillis();
-        if (now >= nextSpawnAt) {
-            spawnRandom(worldWidth);
+        if (spawnedThisLevel < MAX_POWER_UPS_PER_LEVEL && now >= nextSpawnAt) {
+            Float spawnX = pickSpawnXOverGround(level);
+            if (spawnX != null) {
+                PowerUpType type = random.nextBoolean() ? PowerUpType.SPEED_BOOST : PowerUpType.DAMAGE_BOOST;
+                powerUps.add(new PowerUp(type, spawnX, SPAWN_Y, FALL_SPEED));
+                spawnedThisLevel++;
+            }
             scheduleNextSpawn();
         }
 
@@ -31,10 +43,38 @@ public class PowerUpSystem {
         applyPickups(robot1, robot2);
     }
 
-    private void spawnRandom(int worldWidth) {
-        float spawnX = 40 + random.nextInt(Math.max(1, worldWidth - 80));
-        PowerUpType type = random.nextBoolean() ? PowerUpType.SPEED_BOOST : PowerUpType.DAMAGE_BOOST;
-        powerUps.add(new PowerUp(type, spawnX, SPAWN_Y, FALL_SPEED));
+    private Float pickSpawnXOverGround(Level level) {
+        List<Tile> grounds = new ArrayList<>();
+        int n = level.getLevelSize();
+        for (int i = 0; i < n; i++) {
+            Tile t = level.findTile(i);
+            if (isGroundTile(t)) {
+                grounds.add(t);
+            }
+        }
+        if (grounds.isEmpty()) {
+            return null;
+        }
+        Tile tile = grounds.get(random.nextInt(grounds.size()));
+        float tx = tile.getPosition().getVector2DX();
+        float tw = tile.getTileWidth();
+        float minX = tx + SPAWN_X_MARGIN;
+        float maxX = tx + tw - POWERUP_WIDTH - SPAWN_X_MARGIN;
+        if (maxX <= minX) {
+            float centered = tx + (tw - POWERUP_WIDTH) * 0.5f;
+            return Math.max(tx, Math.min(centered, tx + tw - POWERUP_WIDTH));
+        }
+        return minX + random.nextFloat() * (maxX - minX);
+    }
+
+    private static boolean isGroundTile(Tile tile) {
+        if (tile == null) {
+            return false;
+        }
+        if (tile.getIsMoving()) {
+            return false;
+        }
+        return tile.getTileHeight() >= GROUND_MIN_TILE_HEIGHT;
     }
 
     private void scheduleNextSpawn() {
@@ -60,7 +100,7 @@ public class PowerUpSystem {
 
             for (int i = 0; i < levelSize; i++) {
                 Tile tile = level.findTile(i);
-                if (tile == null) continue;
+                if (!isGroundTile(tile)) continue;
 
                 float tx = tile.getPosition().getVector2DX();
                 float ty = tile.getPosition().getVector2DY();
@@ -130,6 +170,7 @@ public class PowerUpSystem {
 
     public void reset() {
         powerUps.clear();
+        spawnedThisLevel = 0;
         scheduleNextSpawn();
     }
 }

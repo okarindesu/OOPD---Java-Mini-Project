@@ -60,63 +60,43 @@ public class GameRenderer {
             return new Font("Arial", Font.PLAIN, (int) size); // fallback
         }
     }
-
-    /**
-     * Loads an image from a project-relative path (run from repo root), or from the classpath
-     * (e.g. {@code /backgrounds/...} when {@code resources} is marked as a resource root).
-     */
     private BufferedImage loadBackgroundImage(String filePath, String classpathPath) {
-    BufferedImage rawImage = null;
-    try {
-        File f = new File(filePath);
-        if (f.isFile()) {
-            rawImage = ImageIO.read(f);
-        }
-    } catch (Exception e) {
-        System.out.println("Failed to load background file: " + filePath);
-    }
-
-    // If first attempt failed, try the classpath
-    if (rawImage == null) {
-        try (InputStream in = GameRenderer.class.getResourceAsStream(classpathPath)) {
-            if (in != null) {
-                rawImage = ImageIO.read(in);
+        try {
+            File f = new File(filePath);
+            if (f.isFile()) {
+                return ImageIO.read(f);
             }
         } catch (Exception e) {
-            System.out.println("Failed to load background classpath: " + classpathPath);
+            System.out.println("Could not load background file: " + filePath);
+            e.printStackTrace();
         }
+        try (InputStream in = GameRenderer.class.getResourceAsStream(classpathPath)) {
+            if (in != null) {
+                return ImageIO.read(in);
+            }
+        } catch (Exception e) {
+            System.out.println("Could not load background classpath: " + classpathPath);
+            e.printStackTrace();
+        }
+        System.out.println("Background not found: " + filePath + " or " + classpathPath);
+        return null;
     }
-
-    // If we successfully got an image, RESIZE it before returning
-    if (rawImage != null) {
-        return resizeImage(rawImage, 1280, 720);
-    }
-
-    System.out.println("Background not found: " + filePath + " or " + classpathPath);
-    return null;
-}
-
-// Helper method to handle the scaling
-private BufferedImage resizeImage(BufferedImage originalImage, int targetWidth, int targetHeight) {
-    BufferedImage resizedImage = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB);
-    Graphics2D g2d = resizedImage.createGraphics();
-    
-    // This rendering hint makes the pixel art/background look smoother when scaled
-    g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-    
-    g2d.drawImage(originalImage, 0, 0, targetWidth, targetHeight, null);
-    g2d.dispose();
-    return resizedImage;
-}
 
     /**
-     * Draws the main menu image scaled to cover the canvas, centered.
-     * If {@code redTint} is true, applies a semi-transparent red overlay (game over).
+     * Scales the menu image to cover the game viewport (1280×720 from {@code GameLoop}).
+     * Uses the canvas size at draw time so the buffer always matches the visible window.
      */
-    private void drawMainMenuBackground(Graphics2D g2, boolean redTint) {
+    private void drawMainMenuBackground(Graphics2D g2, boolean gameOver) {
+        int vw = canvas.getWidth();
+        int vh = canvas.getHeight();
+        if (vw <= 0 || vh <= 0) {
+            vw = width;
+            vh = height;
+        }
+
         if (mainMenuBackground == null) {
             g2.setColor(Color.BLACK);
-            g2.fillRect(0, 0, width, height);
+            g2.fillRect(0, 0, vw, vh);
             return;
         }
 
@@ -124,26 +104,36 @@ private BufferedImage resizeImage(BufferedImage originalImage, int targetWidth, 
         int ih = mainMenuBackground.getHeight();
         if (iw <= 0 || ih <= 0) {
             g2.setColor(Color.BLACK);
-            g2.fillRect(0, 0, width, height);
+            g2.fillRect(0, 0, vw, vh);
             return;
         }
 
-        double scale = Math.max((double) width / iw, (double) height / ih);
+        // Cover 16:9 viewport: scale up uniformly so the image fills vw×vh, then center (crop overflow).
+        double scale = Math.max((double) vw / iw, (double) vh / ih);
         int dw = (int) Math.ceil(iw * scale);
         int dh = (int) Math.ceil(ih * scale);
-        int dx = (width - dw) / 2;
-        int dy = (height - dh) / 2;
+        int dx = (vw - dw) / 2;
+        int dy = (vh - dh) / 2;
 
-        Object oldHint = g2.getRenderingHint(RenderingHints.KEY_INTERPOLATION);
+        Object oldInterp = g2.getRenderingHint(RenderingHints.KEY_INTERPOLATION);
         g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+
+        Shape oldClip = g2.getClip();
+        g2.setClip(0, 0, vw, vh);
         g2.drawImage(mainMenuBackground, dx, dy, dw, dh, null);
-        if (oldHint != null) {
-            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, oldHint);
+        g2.setClip(oldClip);
+
+        if (oldInterp != null) {
+            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, oldInterp);
         }
 
-        if (redTint) {
-            g2.setColor(new Color(200, 0, 0, 170));
-            g2.fillRect(0, 0, width, height);
+        if (gameOver) {
+            g2.setColor(new Color(150, 0, 0, 180));
+            g2.fillRect(0, 0, vw, vh);
+        } else {
+            g2.setColor(new Color(0, 0, 0, 80));
+            g2.fillRect(0, 0, vw, vh);
         }
     }
 
@@ -272,6 +262,7 @@ private BufferedImage resizeImage(BufferedImage originalImage, int targetWidth, 
         int selected = context.getSelectedIndex();
 
         Graphics2D g2 = (Graphics2D) g;
+
 
         drawMainMenuBackground(g2, true);
 
@@ -562,8 +553,10 @@ private BufferedImage resizeImage(BufferedImage originalImage, int targetWidth, 
         drawLevel(g , level , camera) ;
         drawRobot(g , robot1 , Color.RED) ;
         drawRobot(g , robot2 , Color.CYAN) ;
+
         drawProjectiles(g , robot1, Color.RED) ;
         drawProjectiles(g , robot2, Color.GREEN) ;
+
         drawPowerUps(g, powerUpSystem.getPowerUps());
         drawUI(g , robot1 , robot2) ;
 
@@ -590,18 +583,18 @@ private BufferedImage resizeImage(BufferedImage originalImage, int targetWidth, 
         }
     }
 
-    private void drawProjectiles(Graphics g , Robot robot, Color color) {
-        List<Projectile> p1 = robot.getHandGun().getProjectileSystem().getProjectiles() ;
 
-        for(Projectile p : p1) {
-            if(p.getHasHitTile() || p.getHasHitRobot() || p.getHasReachedBoundary()) continue ;
+    private void drawProjectiles(Graphics g, Robot robot, Color color) {
+        List<Projectile> projectiles = robot.getHandGun().getProjectileSystem().getProjectiles();
 
-            int pX = (int) p.getPosition().getVector2DX() ;
-            int pY = (int) p.getPosition().getVector2DY() ;
+        for (Projectile p : projectiles) {
+            if (p.getHasHitTile() || p.getHasHitRobot() || p.getHasReachedBoundary()) continue;
+
+            int pX = (int) p.getPosition().getVector2DX();
+            int pY = (int) p.getPosition().getVector2DY();
 
             g.setColor(color);
-
-            g.fillOval(pX , pY , (int) p.getProjectileRadius() , (int) p.getProjectileRadius()) ;
+            g.fillOval(pX, pY, (int) p.getProjectileRadius(), (int) p.getProjectileRadius());
         }
     }
 
