@@ -2,6 +2,7 @@ package entities;
 
 import Weapons.MeleeWeapon;
 import Weapons.Projectile;
+import engine.GameOverState;
 
 import java.util.Iterator;
 import java.util.List;
@@ -23,8 +24,8 @@ public class RobotSystem {
             MeleeWeapon meleeWeapon = robot1.getMeleeWeapon() ;
             meleeWeapon.use(robot1) ;
             if(checkIfInAttackRange()) {
-                if(robot1.getPosition().getVector2DX() < robot2.getPosition().getVector2DX() && robot1.getDirection() == 1 && robot2.getDirection() == -1) robot2.takeDamage(meleeWeapon.getMeleeDamage());
-                else if(robot1.getPosition().getVector2DX() > robot2.getPosition().getVector2DX() && robot1.getDirection() == -1 && robot2.getDirection() == 1) robot2.takeDamage(meleeWeapon.getMeleeDamage());
+                // Player 1 melee hits robot2 whenever in range, regardless of facing
+                robot2.takeDamage(meleeWeapon.getMeleeDamage());
             }
             robot1.isAttacking = false;
         }
@@ -32,8 +33,8 @@ public class RobotSystem {
             MeleeWeapon meleeWeapon = robot2.getMeleeWeapon() ;
             meleeWeapon.use(robot2) ;
             if(checkIfInAttackRange()) {
-                if(robot1.getPosition().getVector2DX() < robot2.getPosition().getVector2DX() && robot1.getDirection() == 1 && robot2.getDirection() == -1) robot1.takeDamage(meleeWeapon.getMeleeDamage());
-                else if(robot1.getPosition().getVector2DX() > robot2.getPosition().getVector2DX() && robot1.getDirection() == -1 && robot2.getDirection() == 1) robot1.takeDamage(meleeWeapon.getMeleeDamage());
+                // Player 2 melee hits robot1 whenever in range, regardless of facing
+                robot1.takeDamage(meleeWeapon.getMeleeDamage());
             }
             robot2.isAttacking = false ;
         }
@@ -93,16 +94,18 @@ public class RobotSystem {
         if(robot2.isDead() && robot2.hasLivesRemaining()) robot2.respawn();
     }
 
-    public void checkWinCondition() {
-        if(!robot1.hasLivesRemaining() && robot1.isDead()) {
+    public GameOverState checkWinCondition() {
+        // Game should end as soon as lives reach zero
+        if(!robot1.hasLivesRemaining()) {
             robot1.gameOverforRobo = true ;
             robot1.death() ;
-            IO.println("Player 2 Wins !");
+            return GameOverState.PLAYER2_WINS;
         }
-        else if(!robot2.hasLivesRemaining() && robot2.isDead()) {
+        else if(!robot2.hasLivesRemaining()) {
             robot2.gameOverforRobo = true ;
             robot2.death() ;
-            IO.println("Player 1 Wins !");
+            return GameOverState.PLAYER1_WINS;
         }
+        return GameOverState.NONE;
     }
 }

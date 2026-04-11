@@ -9,6 +9,7 @@ import physics.PhysicsSystem;
 import utils.Vector2D;
 
 import javax.imageio.ImageIO;
+import javax.swing.SwingUtilities;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -30,10 +31,15 @@ public class GameLoop extends Canvas implements Runnable {
     private CollisionHandler collisionHandler ;
     private CollisionResolver collisionResolver ;
     private Camera camera ;
+    private PowerUpSystem powerUpSystem;
     private AnimationInitializer animationInitializer ;
     private GameStateHandler gameStateHandler ;
     private LevelSelectionContext levelSelectionContext ;
     private StartScreenContext startScreenContext ;
+    private GameOverContext gameOverContext;
+
+    private static float BGMMUSIC = 0.25f ;
+    private static float SFXMUSIC = 8.00f ;
 
     private int selectedLevel = 0 ;
     private LevelInfo[] levels ;
@@ -64,6 +70,7 @@ public class GameLoop extends Canvas implements Runnable {
 
         collisionHandler = new CollisionHandler() ;
         collisionResolver = new CollisionResolver() ;
+        powerUpSystem = new PowerUpSystem();
 
         animationInitializer = new AnimationInitializer(robot1.getAnimationManager() , robot2.getAnimationManager()) ;
         animationInitializer.initializeRoboAnimation();
@@ -106,9 +113,25 @@ public class GameLoop extends Canvas implements Runnable {
                 ),
         };
 
+        SoundManager.load("move_ui", "resources/sounds/selecting_buttons2.wav");
+        SoundManager.load("select_ui", "resources/sounds/select_button.wav");
+        SoundManager.load("game_over_effect" , "resources/sounds/game_over_effect.wav");
+
+        SoundManager.load("robo_jump", "resources/sounds/jump.wav");
+        SoundManager.load("robo_explode", "resources/sounds/robo_explosion.wav");
+        SoundManager.load("robo_shoot", "resources/sounds/shoot.wav");
+        SoundManager.load("robo_attack", "resources/sounds/attack.wav");
+        SoundManager.load("robo_damage", "resources/sounds/damage.wav");
+
+        MusicPlayer.setVolume(BGMMUSIC);
+        SoundManager.setVolume(SFXMUSIC);
+
+
+
         gameStateHandler = new GameStateHandler(GameState.START_SCREEN_STATE) ;
         levelSelectionContext = new LevelSelectionContext(gameStateHandler , levels , selectedLevel) ;
         startScreenContext = new StartScreenContext(gameStateHandler) ;
+        gameOverContext = new GameOverContext(gameStateHandler);
     }
 
     private BufferedImage loadImage(String path) {
@@ -147,6 +170,13 @@ public class GameLoop extends Canvas implements Runnable {
         } catch (InterruptedException e) {
             e.printStackTrace() ;
         }
+        // Try to close the window that contains this canvas
+        java.awt.Window window = SwingUtilities.getWindowAncestor(this);
+        if (window != null) {
+            window.dispose();
+        }
+        // Ensure JVM exits in case other threads are still alive
+        System.exit(0);
     }
 
     @Override
@@ -154,6 +184,7 @@ public class GameLoop extends Canvas implements Runnable {
         long lastTime = System.nanoTime() ;
         double nsPerUpdate = 1_000_000_000.0/60.0 ;
         double delta = 0 ;
+        GameState previousState = null ;
 
         while(running) {
 
@@ -163,6 +194,25 @@ public class GameLoop extends Canvas implements Runnable {
 
             while(delta >= 1) {
                 GameState gameState = gameStateHandler.getGameState() ;
+
+                if (gameState != previousState) {
+                    switch (gameState) {
+                        case START_SCREEN_STATE:
+                        case LEVEL_SELECTION_STATE:
+                            MusicPlayer.play("resources/sounds/start_screen_ost.wav");
+                            break;
+
+                        case GAME_PLAYING_STATE:
+                            MusicPlayer.play("resources/sounds/gameplay_ost.wav");
+                            break;
+
+                        case GAME_OVER_STATE:
+                            MusicPlayer.play("resources/sounds/game_over.wav");
+                            break;
+                    }
+                    previousState = gameState;
+                }
+
                 switch(gameState) {
                     case START_SCREEN_STATE:
                         updateStartScreen(startScreenContext) ;
@@ -173,22 +223,25 @@ public class GameLoop extends Canvas implements Runnable {
                     case GAME_PLAYING_STATE:
                         updateGame(levelSelectionContext);
                         break;
+                    case GAME_OVER_STATE:
+                        updateGameOver();
+                        break;
                 }
                 delta-- ;
             }
-            gameRenderer.render(startScreenContext , levelSelectionContext , robot1 , robot2 , camera) ;
+            gameRenderer.render(startScreenContext , levelSelectionContext , gameOverContext , robot1 , robot2 , camera, powerUpSystem) ;
         }
         stop() ;
     }
 
     private void updateStartScreen(StartScreenContext startScreenContext) {
-        playerController.control(startScreenContext , levelSelectionContext) ;
+        playerController.control(startScreenContext , levelSelectionContext , gameOverContext) ;
         if(startScreenContext.isStartPressed()) levelSelectionContext.getGameStateHandler().setGameState(GameState.LEVEL_SELECTION_STATE) ;
         if(startScreenContext.isQuitPressed()) stop() ;
     }
 
     private void updateGame(LevelSelectionContext levelSelectionContext) {
-        playerController.control(startScreenContext , levelSelectionContext) ;
+        playerController.control(startScreenContext , levelSelectionContext , gameOverContext) ;
         collisionHandler.handleCollisions(collisionResolver , levelSelectionContext.getLevel() , robot1 , robot2 , WIDTH , HEIGHT) ;
 
         robot1.updateAnimation();
@@ -198,11 +251,39 @@ public class GameLoop extends Canvas implements Runnable {
         robotSystem.checkShootingRobots();
         robotSystem.checkAttacksRobots();
         robotSystem.checkRespawns();
-        robotSystem.checkWinCondition();
+        powerUpSystem.update(levelSelectionContext.getLevel(), robot1, robot2, WIDTH);
+        GameOverState result = robotSystem.checkWinCondition();
+        if (result != GameOverState.NONE) {
+            gameOverContext.setGameOverState(result);
+            gameStateHandler.setGameState(GameState.GAME_OVER_STATE);
+        }
         physicsSystem.update(robot1 , robot2 , levelSelectionContext.getLevel()) ;
     }
 
     private void updateLevelSelection(LevelSelectionContext levelSelectionContext) {
-        playerController.control(startScreenContext , levelSelectionContext) ;
+        playerController.control(startScreenContext , levelSelectionContext , gameOverContext) ;
+    }
+
+    private void updateGameOver() {
+        playerController.control(startScreenContext , levelSelectionContext , gameOverContext) ;
+
+        if (gameOverContext.isReplayPressed()) {
+            resetForReplay();
+            gameOverContext.resetActions();
+            gameStateHandler.setGameState(GameState.GAME_PLAYING_STATE);
+        } else if (gameOverContext.isLevelSelectPressed()) {
+            resetForReplay();
+            gameOverContext.resetActions();
+            gameStateHandler.setGameState(GameState.LEVEL_SELECTION_STATE);
+        } else if (gameOverContext.isQuitPressed()) {
+            // Mirror main menu quit behavior: exit immediately
+            System.exit(0);
+        }
+    }
+
+    private void resetForReplay() {
+        robot1.resetForNewGame();
+        robot2.resetForNewGame();
+        powerUpSystem.reset();
     }
 }

@@ -18,7 +18,7 @@ public class Robot {
     private MeleeWeapon meleeWeapon ;
     private AnimationManager animationManager ;
 
-    public float jumpForce = 400.0f ;
+    public float jumpForce = 550.0f ;
     public float defaultVel = 200.0f ;
     public float meleeDamage = 40.0f ;
     public boolean onSurface = false ;
@@ -33,6 +33,9 @@ public class Robot {
     private static final float ATTACK_DAMAGE = 20.0f ;
     private static final float MAX_HEALTH = 100.0f ;
     private static final int MAX_LIVES = 3 ;
+    private static final float BASE_MOVE_SPEED = 200.0f;
+    private static final float BASE_MELEE_DAMAGE = 40.0f;
+    private static final float BASE_BULLET_DAMAGE = 20.0f;
 
     public boolean isHit = false ;
     public long hitTime = 0 ;
@@ -70,6 +73,7 @@ public class Robot {
 
     public void jump() {
         if(onSurface) {
+            SoundManager.play("robo_jump");
             this.velocity.subLocal(new Vector2D(0,jumpForce)) ;
             onSurface = false ;
         }
@@ -79,6 +83,7 @@ public class Robot {
     }
 
     public void shoot() {
+        SoundManager.play("robo_shoot");
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastShootTime >= SHOOT_COOLDOWN) {
             handGun.createProjectile(position , velocity , direction) ;
@@ -114,6 +119,7 @@ public class Robot {
     public void attack() {
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastAttackTime >= ATTACK_COOLDOWN) {
+            SoundManager.play("robo_attack");
             isAttacking = true ;
             lastAttackTime = currentTime ;
         }
@@ -123,6 +129,7 @@ public class Robot {
     }
 
     public void takeDamage(float damage) {
+        SoundManager.play("robo_damage");
         this.health -= damage ;
         this.hitTime = System.currentTimeMillis() ;
         this.isHit = true ;
@@ -155,6 +162,38 @@ public class Robot {
         velocity.set(0.0f , 0.0f);
         lives = 0;
         health = 0.0f;
+    }
+
+    public void resetForNewGame() {
+        this.health = MAX_HEALTH;
+        this.lives = MAX_LIVES;
+        this.position.set(spawnPosition);
+        this.velocity.set(0, 0);
+        this.onSurface = false;
+        this.isAttacking = false;
+        this.isShooting = false;
+        this.gameOverforRobo = false;
+        this.isHit = false;
+        this.roboWidth = 60;
+        this.roboHeight = 60;
+        this.defaultVel = BASE_MOVE_SPEED;
+        this.meleeDamage = BASE_MELEE_DAMAGE;
+        this.handGun = new HandGun();
+        this.handGun.setBulletDamage(BASE_BULLET_DAMAGE);
+        this.meleeWeapon = new MeleeWeapon(meleeDamage);
+        this.direction = 1;
+        this.animationManager.setDirection("right");
+        this.animationManager.setState("idle_right");
+    }
+
+    public void applySpeedMultiplier(float multiplier) {
+        this.defaultVel *= multiplier;
+    }
+
+    public void applyDamageBonus(float bonusDamage) {
+        this.meleeDamage += bonusDamage;
+        this.meleeWeapon.setMeleeDamage(this.meleeDamage);
+        this.handGun.setBulletDamage(this.handGun.getBulletDamage() + bonusDamage);
     }
 
     public void updateAnimation() {

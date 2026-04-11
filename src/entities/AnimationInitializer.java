@@ -45,6 +45,19 @@ public class AnimationInitializer {
                         "/sprites/player1/attack_gun_right/frame3.png"
                 ));
 
+        animationManager1.addAnimation("attack_sword_left",
+                SpriteLoader.loadFrames(
+                        "/sprites/player1/attack_sword_left/frame2.png",
+                        "/sprites/player1/attack_sword_left/frame3.png",
+                        "/sprites/player1/attack_sword_left/frame1.png"
+                ));
+        animationManager1.addAnimation("attack_sword_right",
+                SpriteLoader.loadFrames(
+                        "/sprites/player1/attack_sword_right/frame1.png",
+                        "/sprites/player1/attack_sword_right/frame2.png",
+                        "/sprites/player1/attack_sword_right/frame3.png"
+                ));
+
         animationManager1.setState("idle_right");
 
         animationManager2.addAnimation("idle_right",
@@ -80,6 +93,19 @@ public class AnimationInitializer {
                         "/sprites/player2/attack_sword_right/frame1.png",
                         "/sprites/player2/attack_sword_right/frame2.png",
                         "/sprites/player2/attack_sword_right/frame3.png"
+                ));
+
+        animationManager2.addAnimation("attack_gun_left",
+                SpriteLoader.loadFrames(
+                        "/sprites/player2/attack_gun_left/frame1.png",
+                        "/sprites/player2/attack_gun_left/frame2.png",
+                        "/sprites/player2/attack_gun_left/frame3.png"
+                ));
+        animationManager2.addAnimation("attack_gun_right",
+                SpriteLoader.loadFrames(
+                        "/sprites/player2/attack_gun_right/frame1.png",
+                        "/sprites/player2/attack_gun_right/frame2.png",
+                        "/sprites/player2/attack_gun_right/frame3.png"
                 ));
         animationManager2.setState("idle_left");
     }

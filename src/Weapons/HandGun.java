@@ -18,7 +18,7 @@ public class HandGun {
 
     public void createProjectile(Vector2D pos , Vector2D roboVel , int dir) {
         Vector2D vel ;
-        vel = new Vector2D(dir * bulletVelocity , roboVel.getVector2DY()) ;
+        vel = new Vector2D(dir * bulletVelocity , 0.0f) ;
 
         Vector2D spawn = new Vector2D(pos.getVector2DX(), pos.getVector2DY()) ;
         spawn.addLocal(new Vector2D(dir * bulletOffset , bulletOffset));
@@ -27,6 +27,7 @@ public class HandGun {
     }
 
     public float getBulletDamage() { return this.bulletDamage ; }
+    public void setBulletDamage(float bulletDamage) { this.bulletDamage = bulletDamage ; }
     public float getBulletVelocity() { return this.bulletVelocity ; }
     public ProjectileSystem getProjectileSystem() { return this.projectileSystem ; }
 }
