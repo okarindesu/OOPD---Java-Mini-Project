@@ -13,7 +13,10 @@ import java.awt.*;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.InputStream;
 import java.util.List;
+
+import javax.imageio.ImageIO;
 
 public class GameRenderer {
     private Canvas canvas ;
@@ -25,10 +28,16 @@ public class GameRenderer {
     private Font smallTitle , mediumTitle , bigTitle ;
     private Font smallUI , mediumUI , bigUI ;
 
+    /** Full-screen menu background (main menu + game over). */
+    private final BufferedImage mainMenuBackground;
+
     public GameRenderer(Canvas canvas , int width , int height) {
         this.canvas = canvas ;
         this.width = width ;
         this.height = height ;
+        mainMenuBackground = loadBackgroundImage(
+                "resources/backgrounds/Main_Menu_Image.png",
+                "/backgrounds/Main_Menu_Image.png");
         titleFont = loadFont("resources/fonts/p2p.ttf" , 20f) ;
         uiFont = loadFont("resources/fonts/sk_bo.ttf" , 20f) ;
 
@@ -49,6 +58,92 @@ public class GameRenderer {
             System.out.println("Failed to load font: " + path);
             e.printStackTrace();
             return new Font("Arial", Font.PLAIN, (int) size); // fallback
+        }
+    }
+
+    /**
+     * Loads an image from a project-relative path (run from repo root), or from the classpath
+     * (e.g. {@code /backgrounds/...} when {@code resources} is marked as a resource root).
+     */
+    private BufferedImage loadBackgroundImage(String filePath, String classpathPath) {
+    BufferedImage rawImage = null;
+    try {
+        File f = new File(filePath);
+        if (f.isFile()) {
+            rawImage = ImageIO.read(f);
+        }
+    } catch (Exception e) {
+        System.out.println("Failed to load background file: " + filePath);
+    }
+
+    // If first attempt failed, try the classpath
+    if (rawImage == null) {
+        try (InputStream in = GameRenderer.class.getResourceAsStream(classpathPath)) {
+            if (in != null) {
+                rawImage = ImageIO.read(in);
+            }
+        } catch (Exception e) {
+            System.out.println("Failed to load background classpath: " + classpathPath);
+        }
+    }
+
+    // If we successfully got an image, RESIZE it before returning
+    if (rawImage != null) {
+        return resizeImage(rawImage, 1280, 720);
+    }
+
+    System.out.println("Background not found: " + filePath + " or " + classpathPath);
+    return null;
+}
+
+// Helper method to handle the scaling
+private BufferedImage resizeImage(BufferedImage originalImage, int targetWidth, int targetHeight) {
+    BufferedImage resizedImage = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB);
+    Graphics2D g2d = resizedImage.createGraphics();
+    
+    // This rendering hint makes the pixel art/background look smoother when scaled
+    g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+    
+    g2d.drawImage(originalImage, 0, 0, targetWidth, targetHeight, null);
+    g2d.dispose();
+    return resizedImage;
+}
+
+    /**
+     * Draws the main menu image scaled to cover the canvas, centered.
+     * If {@code redTint} is true, applies a semi-transparent red overlay (game over).
+     */
+    private void drawMainMenuBackground(Graphics2D g2, boolean redTint) {
+        if (mainMenuBackground == null) {
+            g2.setColor(Color.BLACK);
+            g2.fillRect(0, 0, width, height);
+            return;
+        }
+
+        int iw = mainMenuBackground.getWidth();
+        int ih = mainMenuBackground.getHeight();
+        if (iw <= 0 || ih <= 0) {
+            g2.setColor(Color.BLACK);
+            g2.fillRect(0, 0, width, height);
+            return;
+        }
+
+        double scale = Math.max((double) width / iw, (double) height / ih);
+        int dw = (int) Math.ceil(iw * scale);
+        int dh = (int) Math.ceil(ih * scale);
+        int dx = (width - dw) / 2;
+        int dy = (height - dh) / 2;
+
+        Object oldHint = g2.getRenderingHint(RenderingHints.KEY_INTERPOLATION);
+        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g2.drawImage(mainMenuBackground, dx, dy, dw, dh, null);
+        if (oldHint != null) {
+            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, oldHint);
+        }
+
+        if (redTint) {
+            g2.setColor(new Color(200, 0, 0, 170));
+            g2.fillRect(0, 0, width, height);
         }
     }
 
@@ -84,8 +179,7 @@ public class GameRenderer {
         Graphics2D g2 = (Graphics2D) g;
 
         // ===== BACKGROUND =====
-        g.setColor(Color.BLACK);
-        g.fillRect(0, 0, width, height);
+        drawMainMenuBackground(g2, false);
 
         // ===== TITLE =====
         g.setFont(bigTitle);
@@ -179,8 +273,7 @@ public class GameRenderer {
 
         Graphics2D g2 = (Graphics2D) g;
 
-        g.setColor(Color.BLACK);
-        g.fillRect(0, 0, width, height);
+        drawMainMenuBackground(g2, true);
 
         g.setFont(bigTitle);
         g.setColor(Color.WHITE);
