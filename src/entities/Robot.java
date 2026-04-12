@@ -83,9 +83,9 @@ public class Robot {
     }
 
     public void shoot() {
-        SoundManager.play("robo_shoot");
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastShootTime >= SHOOT_COOLDOWN) {
+            SoundManager.play("robo_shoot");
             handGun.createProjectile(position , velocity , direction) ;
             isShooting = true ;
             lastShootTime = currentTime ;

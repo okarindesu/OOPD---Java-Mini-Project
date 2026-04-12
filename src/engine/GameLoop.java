@@ -107,10 +107,15 @@ public class GameLoop extends Canvas implements Runnable {
                         loadImage("resources/backgrounds/preview/b6.png")
                 ),
                 new LevelInfo(
-                        "resources/levels/Level7.wrl",
+                        "resources/levels/Vertical_Movement.wrl",
                         "Dunes",
                         loadImage("resources/backgrounds/preview/b7.png")
                 ),
+                new LevelInfo(
+                        "resources/levels/Basic_Platforms.wrl",
+                        "Aurora",
+                        loadImage("resources/backgrounds/preview/b1.png")
+                )
         };
 
         SoundManager.load("move_ui", "resources/sounds/selecting_buttons2.wav");
