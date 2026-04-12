@@ -28,6 +28,15 @@ public class GameRenderer {
     private Font smallUI , mediumUI , bigUI ;
     private final BufferedImage mainMenuBackground;
 
+    private long shakeStartTime = 0;
+    private long shakeDuration = 0;
+    private int shakeIntensity = 0;
+    private boolean isShaking = false;
+
+    boolean isRedTint = false;
+    long redTintStartTime = 0;
+    long redTintDuration = 0;
+
     public GameRenderer(Canvas canvas , int width , int height) {
         this.canvas = canvas ;
         this.width = width ;
@@ -335,6 +344,20 @@ public class GameRenderer {
         g.drawRect(x, y, enterW, boxHeightCtrl);
         int enterTextX = x + (enterW - fm.stringWidth(enter)) / 2;
         g.drawString(enter, enterTextX, y + 22);
+
+        long currentTime = System.currentTimeMillis();
+        long elapsed = currentTime - context.startTime;
+
+        if(elapsed < context.fadeDuration) {
+            double progress = (double) elapsed / context.fadeDuration;
+
+            // fade from black → transparent
+            int alpha = (int)(255 * (1 - progress));
+            alpha = Math.max(0, Math.min(255, alpha));
+
+            g.setColor(new Color(0, 0, 0, alpha));
+            g.fillRect(0, 0, width, height);
+        }
     }
 
     private void drawPixelButton(Graphics2D g, int x, int y, int w, int h,
@@ -538,18 +561,55 @@ public class GameRenderer {
     }
 
     private void gameRender(Graphics g , Robot robot1 , Robot robot2 , Level level , Camera camera, PowerUpSystem powerUpSystem) {
+        int offsetX = 0;
+        int offsetY = 0;
+
+        if(isShaking) {
+            long currentTime = System.currentTimeMillis();
+
+            if(currentTime - shakeStartTime < shakeDuration) {
+                offsetX = (int)(Math.random() * shakeIntensity * 2) - shakeIntensity;
+                offsetY = (int)(Math.random() * shakeIntensity * 2) - shakeIntensity;
+            } else {
+                isShaking = false;
+            }
+        }
+
         camera.setCameraX(robot1.getPosition().getVector2DX() - width / 2) ;
         camera.setCameraY(robot1.getPosition().getVector2DY() - height / 2) ;
 
         g.setColor(Color.BLACK) ;
         g.fillRect(0 , 0 , width , height) ;
 
+        g.translate(offsetX, offsetY);
         drawLevel(g , level , camera) ;
         drawRobot(g , robot1 , Color.RED) ;
         drawRobot(g , robot2 , Color.CYAN) ;
         drawProjectiles(g , robot1, Color.RED) ;
         drawProjectiles(g , robot2, Color.GREEN) ;
         drawPowerUps(g, powerUpSystem.getPowerUps());
+        g.translate(-offsetX, -offsetY);
+
+        long currentTime = System.currentTimeMillis();
+        if(isRedTint) {
+            long elapsed = currentTime - redTintStartTime;
+
+            if(elapsed < redTintDuration) {
+                double progress = (double) elapsed / redTintDuration;
+
+                // fade from strong → transparent
+                int alpha = (int)(150 * (1 - progress)); // max 150 → 0
+
+                // clamp just in case
+                alpha = Math.max(0, Math.min(150, alpha));
+
+                g.setColor(new Color(255, 0, 0, alpha));
+                g.fillRect(0, 0, width, height);
+            } else {
+                isRedTint = false;
+            }
+        }
+
         drawUI(g , robot1 , robot2) ;
 
         g.setColor(Color.WHITE) ;
@@ -748,5 +808,18 @@ public class GameRenderer {
                 );
             }
         }
+    }
+
+    public void triggerScreenShake(long duration, int intensity) {
+        isShaking = true;
+        shakeStartTime = System.currentTimeMillis();
+        shakeDuration = duration;
+        shakeIntensity = intensity;
+    }
+
+    public void triggerRedTint(long duration) {
+        isRedTint = true;
+        redTintStartTime = System.currentTimeMillis();
+        redTintDuration = duration;
     }
 }

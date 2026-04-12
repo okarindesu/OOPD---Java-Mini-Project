@@ -10,6 +10,10 @@ public class GameOverContext {
     private boolean quitPressed;
     private GameOverState gameOverState;
 
+    public long startTime;
+    public long fadeDuration = 5000; // ms
+    public boolean justEntered = true;
+
     private final String[] options = {
             "Replay Level",
             "Level Select",

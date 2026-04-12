@@ -57,6 +57,12 @@ public class AnimationInitializer {
                         "/sprites/player1/attack_sword_right/frame2.png",
                         "/sprites/player1/attack_sword_right/frame3.png"
                 ));
+        animationManager1.addAnimation("robo_explosion",
+                SpriteLoader.loadFrames(
+                        "/sprites/explosion/frame1.png",
+                        "/sprites/explosion/frame2.png",
+                        "/sprites/explosion/frame3.png"
+                ));
 
         animationManager1.setState("idle_right");
 
@@ -106,6 +112,12 @@ public class AnimationInitializer {
                         "/sprites/player2/attack_gun_right/frame1.png",
                         "/sprites/player2/attack_gun_right/frame2.png",
                         "/sprites/player2/attack_gun_right/frame3.png"
+                ));
+        animationManager2.addAnimation("robo_explosion",
+                SpriteLoader.loadFrames(
+                        "/sprites/explosion/frame1.png",
+                        "/sprites/explosion/frame2.png",
+                        "/sprites/explosion/frame3.png"
                 ));
         animationManager2.setState("idle_left");
     }

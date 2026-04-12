@@ -97,8 +97,12 @@ public class AnimationManager {
     public boolean isAttackAnimating() {
         return currentState != null && currentState.startsWith("attack_");
     }
+    public boolean isExplodeAnimating() { return currentState != null && currentState.startsWith("robo_"); }
 
     public boolean isAttackFinished() {
+        return animationFinished && currentState != null && currentState.startsWith("attack_");
+    }
+    public boolean isExplosionFinished() {
         return animationFinished && currentState != null && currentState.startsWith("attack_");
     }
 

@@ -2,6 +2,7 @@ package entities;
 
 import Weapons.HandGun;
 import Weapons.MeleeWeapon;
+import physics.GameRenderer;
 import utils.Vector2D;
 
 public class Robot {
@@ -40,6 +41,12 @@ public class Robot {
     public boolean isHit = false ;
     public long hitTime = 0 ;
     public static final long HIT_DURATION = 500 ;
+
+    public boolean isExploding = false;
+    public boolean hasExplodedFinal = false;
+    public boolean explosionJustStarted = false ;
+    public long explosionStartTime = 0;
+    public static final long EXPLOSION_DURATION = 1500;
 
     public Robot(float x , float y) {
         this.position = new Vector2D(x , y) ;
@@ -164,24 +171,54 @@ public class Robot {
         health = 0.0f;
     }
 
+    public void explode() {
+        if(isExploding || hasExplodedFinal) return; // prevent retrigger
+
+        isExploding = true;
+        explosionJustStarted = true ;
+        explosionStartTime = System.currentTimeMillis();
+
+        // disable actions
+        isAttacking = false;
+        isShooting = false;
+
+        SoundManager.play("robo_explode");
+        animationManager.setState("robo_explosion");
+    }
+
     public void resetForNewGame() {
         this.health = MAX_HEALTH;
         this.lives = MAX_LIVES;
+
         this.position.set(spawnPosition);
         this.velocity.set(0, 0);
         this.onSurface = false;
+
         this.isAttacking = false;
         this.isShooting = false;
-        this.gameOverforRobo = false;
         this.isHit = false;
+
+        this.gameOverforRobo = false;
+
+        // ✅ CRITICAL FIXES
+        this.isExploding = false;
+        this.hasExplodedFinal = false;
+        this.explosionJustStarted = false;
+        this.explosionStartTime = 0;
+
         this.roboWidth = 60;
         this.roboHeight = 60;
+
         this.defaultVel = BASE_MOVE_SPEED;
         this.meleeDamage = BASE_MELEE_DAMAGE;
+
         this.handGun = new HandGun();
         this.handGun.setBulletDamage(BASE_BULLET_DAMAGE);
+
         this.meleeWeapon = new MeleeWeapon(meleeDamage);
+
         this.direction = 1;
+
         this.animationManager.setDirection("right");
         this.animationManager.setState("idle_right");
     }

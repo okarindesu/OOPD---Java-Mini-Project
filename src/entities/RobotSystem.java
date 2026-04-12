@@ -90,20 +90,24 @@ public class RobotSystem {
     }
 
     public void checkRespawns() {
-        if(robot1.isDead() && robot1.hasLivesRemaining()) robot1.respawn();
-        if(robot2.isDead() && robot2.hasLivesRemaining()) robot2.respawn();
+        if(robot1.isDead() && robot1.hasLivesRemaining()) {
+            if(!robot1.isExploding) robot1.explode();
+        }
+        if(robot2.isDead() && robot2.hasLivesRemaining()) {
+            if(!robot2.isExploding) robot2.explode();
+        }
     }
 
     public GameOverState checkWinCondition() {
         // Game should end as soon as lives reach zero
         if(!robot1.hasLivesRemaining()) {
             robot1.gameOverforRobo = true ;
-            robot1.death() ;
+            if(!robot1.isExploding && !robot1.hasExplodedFinal) robot1.explode();
             return GameOverState.PLAYER2_WINS;
         }
         else if(!robot2.hasLivesRemaining()) {
             robot2.gameOverforRobo = true ;
-            robot2.death() ;
+            if(!robot2.isExploding && !robot2.hasExplodedFinal) robot2.explode();
             return GameOverState.PLAYER1_WINS;
         }
         return GameOverState.NONE;

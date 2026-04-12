@@ -149,35 +149,39 @@ public class PlayerController {
     }
 
     private void controlGameInput() {
-        if(input.isKeyPressed(KeyEvent.VK_A)) robot1.moveLeft();
-        else if(input.isKeyPressed(KeyEvent.VK_D)) robot1.moveRight();
-        else if(!robot1.getAnimationManager().isAttackAnimating()) robot1.idle();
+        if(!robot1.isExploding && !robot2.isExploding) {
+            if (input.isKeyPressed(KeyEvent.VK_A)) robot1.moveLeft();
+            else if (input.isKeyPressed(KeyEvent.VK_D)) robot1.moveRight();
+            else if (!robot1.getAnimationManager().isAttackAnimating()) robot1.idle();
 
-        if(input.isKeyPressed(KeyEvent.VK_W)) robot1.jump() ;
+            if (input.isKeyPressed(KeyEvent.VK_W)) robot1.jump();
 
-        if(input.isKeyPressed((KeyEvent.VK_Q))) robot1.shoot();
-        else if(robot1.getAnimationManager().isAttackFinished()) robot1.idle();
+            if (input.isKeyPressed((KeyEvent.VK_Q))) robot1.shoot();
+            else if (robot1.getAnimationManager().isAttackFinished()) robot1.idle();
 
-        if(input.isKeyPressed(KeyEvent.VK_E)) {
-            robot1.attack();
-        } else if (robot1.getAnimationManager().isAttackFinished()) {
-            robot1.idle() ;
+            if (input.isKeyPressed(KeyEvent.VK_E)) {
+                robot1.attack();
+            } else if (robot1.getAnimationManager().isAttackFinished()) {
+                robot1.idle();
+            }
         }
 
-        if(input.isKeyPressed(KeyEvent.VK_LEFT)) robot2.moveLeft();
-        else if(input.isKeyPressed(KeyEvent.VK_RIGHT)) robot2.moveRight();
-        else if(!robot2.getAnimationManager().isAttackAnimating()) robot2.idle();
+        if(!robot1.isExploding && !robot2.isExploding) {
+            if (input.isKeyPressed(KeyEvent.VK_LEFT)) robot2.moveLeft();
+            else if (input.isKeyPressed(KeyEvent.VK_RIGHT)) robot2.moveRight();
+            else if (!robot2.getAnimationManager().isAttackAnimating()) robot2.idle();
 
-        if(input.isKeyPressed(KeyEvent.VK_UP)) robot2.jump() ;
+            if (input.isKeyPressed(KeyEvent.VK_UP)) robot2.jump();
 
-        if(input.isKeyPressed(KeyEvent.VK_SPACE)) {
-            robot2.attack();
-        } else if (robot2.getAnimationManager().isAttackFinished()) {
-            robot2.idle() ;
+            if (input.isKeyPressed(KeyEvent.VK_SPACE)) {
+                robot2.attack();
+            } else if (robot2.getAnimationManager().isAttackFinished()) {
+                robot2.idle();
+            }
+
+            if (input.isKeyPressed((KeyEvent.VK_NUMPAD0))) robot2.shoot();
+            else if (robot2.getAnimationManager().isAttackFinished()) robot2.idle();
         }
-
-        if(input.isKeyPressed((KeyEvent.VK_NUMPAD0))) robot2.shoot();
-        else if(robot2.getAnimationManager().isAttackFinished()) robot2.idle();
     }
 
     private void controlGameOverInput() {

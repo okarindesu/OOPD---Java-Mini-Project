@@ -14,6 +14,8 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
+import static entities.Robot.EXPLOSION_DURATION;
+
 public class GameLoop extends Canvas implements Runnable {
     private Thread thread ;
     private boolean running = false ;
@@ -208,6 +210,9 @@ public class GameLoop extends Canvas implements Runnable {
                             break;
 
                         case GAME_PLAYING_STATE:
+                            if (previousState == GameState.LEVEL_SELECTION_STATE) {
+                                powerUpSystem.reset();
+                            }
                             MusicPlayer.play("resources/sounds/gameplay_ost.wav");
                             break;
 
@@ -246,6 +251,20 @@ public class GameLoop extends Canvas implements Runnable {
     }
 
     private void updateGame(LevelSelectionContext levelSelectionContext) {
+        updateExplosions(robot1);
+        updateExplosions(robot2);
+        if(robot1.explosionJustStarted || robot2.explosionJustStarted) {
+            if(!robot1.hasLivesRemaining() || !robot2.hasLivesRemaining()) {
+                gameRenderer.triggerScreenShake(700, 15);// BIG explosion
+                gameRenderer.triggerRedTint(500);
+            } else {
+                gameRenderer.triggerScreenShake(700, 15);
+                gameRenderer.triggerRedTint(500);
+            }
+            robot1.explosionJustStarted = false ;
+            robot2.explosionJustStarted = false ;
+        }
+
         playerController.control(startScreenContext , levelSelectionContext , gameOverContext) ;
         collisionHandler.handleCollisions(collisionResolver , levelSelectionContext.getLevel() , robot1 , robot2 , WIDTH , HEIGHT) ;
 
@@ -256,10 +275,12 @@ public class GameLoop extends Canvas implements Runnable {
         robotSystem.checkShootingRobots();
         robotSystem.checkAttacksRobots();
         robotSystem.checkRespawns();
-        powerUpSystem.update(levelSelectionContext.getLevel(), robot1, robot2, WIDTH);
+        powerUpSystem.update(levelSelectionContext.getLevel(), robot1, robot2);
         GameOverState result = robotSystem.checkWinCondition();
         if (result != GameOverState.NONE) {
             gameOverContext.setGameOverState(result);
+            gameOverContext.startTime = System.currentTimeMillis();
+            gameOverContext.justEntered = true;
             gameStateHandler.setGameState(GameState.GAME_OVER_STATE);
         }
         physicsSystem.update(robot1 , robot2 , levelSelectionContext.getLevel()) ;
@@ -290,5 +311,21 @@ public class GameLoop extends Canvas implements Runnable {
         robot1.resetForNewGame();
         robot2.resetForNewGame();
         powerUpSystem.reset();
+    }
+
+    private void updateExplosions(Robot robot) {
+        if(robot.isExploding) {
+            long currentTime = System.currentTimeMillis();
+
+            if(currentTime - robot.explosionStartTime >= Robot.EXPLOSION_DURATION) {
+                robot.isExploding = false;
+                if(robot.hasLivesRemaining()) {
+                    robot.respawn();
+                } else {
+                    robot.hasExplodedFinal = true;
+                    robot.death();
+                }
+            }
+        }
     }
 }
