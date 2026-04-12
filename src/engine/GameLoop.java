@@ -1,3 +1,4 @@
+
 package engine;
 
 import entities.*;
@@ -15,113 +16,78 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 
 public class GameLoop extends Canvas implements Runnable {
-    private Thread thread ;
-    private boolean running = false ;
-    private Vector2D initPos1 ;
-    private Vector2D initPos2 ;
+    private Thread thread;
+    private boolean running = false;
+    private Vector2D initPos1;
+    private Vector2D initPos2;
 
-
-    private PlayerController playerController ;
-    private InputHandler inputHandler ;
-    private Robot robot1 ;
-    private Robot robot2 ;
-    private RobotSystem robotSystem ;
-    private PhysicsSystem physicsSystem ;
-    private GameRenderer gameRenderer ;
-    private CollisionHandler collisionHandler ;
-    private CollisionResolver collisionResolver ;
-    private Camera camera ;
+    private PlayerController playerController;
+    private InputHandler inputHandler;
+    private Robot robot1;
+    private Robot robot2;
+    private RobotSystem robotSystem;
+    private PhysicsSystem physicsSystem;
+    private GameRenderer gameRenderer;
+    private CollisionHandler collisionHandler;
+    private CollisionResolver collisionResolver;
+    private Camera camera;
     private PowerUpSystem powerUpSystem;
-    private AnimationInitializer animationInitializer ;
-    private GameStateHandler gameStateHandler ;
-    private LevelSelectionContext levelSelectionContext ;
-    private StartScreenContext startScreenContext ;
+    private AnimationInitializer animationInitializer;
+    private GameStateHandler gameStateHandler;
+    private LevelSelectionContext levelSelectionContext;
+    private StartScreenContext startScreenContext;
     private GameOverContext gameOverContext;
 
-    private static float BGMMUSIC = 0.25f ;
-    private static float SFXMUSIC = 8.00f ;
+    private static float BGMMUSIC = 0.25f;
+    private static float SFXMUSIC = 8.00f;
 
-    private int selectedLevel = 0 ;
-    private LevelInfo[] levels ;
+    private int selectedLevel = 0;
+    private LevelInfo[] levels;
 
-    public static final int WIDTH = 1280 ;
-    public static final int HEIGHT = 720 ;
-
+    public static final int WIDTH = 1280;
+    public static final int HEIGHT = 720;
 
     public GameLoop() {
-        initPos1 = new Vector2D(100 , 0) ;
-        robot1 = new Robot(initPos1) ;
+        initPos1 = new Vector2D(100, 0);
+        robot1 = new Robot(initPos1);
 
-        initPos2 = new Vector2D(400 , 0) ;
-        robot2 = new Robot(initPos2) ;
+        initPos2 = new Vector2D(400, 0);
+        robot2 = new Robot(initPos2);
 
-        robotSystem = new RobotSystem(robot1 , robot2) ;
+        robotSystem = new RobotSystem(robot1, robot2);
 
-        inputHandler = new InputHandler() ;
-        addKeyListener(inputHandler) ;
-        setFocusable(true) ;
+        inputHandler = new InputHandler();
+        addKeyListener(inputHandler);
+        setFocusable(true);
 
-        camera = new Camera(0 , 0) ;
+        camera = new Camera(0, 0);
 
-        playerController = new PlayerController(robot1 , robot2 , inputHandler) ;
-        physicsSystem = new PhysicsSystem() ;
-        gameRenderer = new GameRenderer(this , WIDTH , HEIGHT) ;
-        setPreferredSize(new Dimension(WIDTH , HEIGHT)) ;
+        playerController = new PlayerController(robot1, robot2, inputHandler);
+        physicsSystem = new PhysicsSystem();
+        gameRenderer = new GameRenderer(this, WIDTH, HEIGHT);
+        setPreferredSize(new Dimension(WIDTH, HEIGHT));
 
-        collisionHandler = new CollisionHandler() ;
-        collisionResolver = new CollisionResolver() ;
+        collisionHandler = new CollisionHandler();
+        collisionResolver = new CollisionResolver();
         powerUpSystem = new PowerUpSystem();
 
-        animationInitializer = new AnimationInitializer(robot1.getAnimationManager() , robot2.getAnimationManager()) ;
+        animationInitializer = new AnimationInitializer(robot1.getAnimationManager(), robot2.getAnimationManager());
         animationInitializer.initializeRoboAnimation();
 
         levels = new LevelInfo[] {
-                new LevelInfo(
-                        "resources/levels/Level1.wrl",
-                        "Aurora",
-                        loadImage("resources/backgrounds/preview/b8.png")
-                ),
-                new LevelInfo(
-                        "resources/levels/Level2.wrl",
-                        "Dunes",
-                        loadImage("resources/backgrounds/preview/b2.png")
-                ),
-                new LevelInfo(
-                        "resources/levels/Level3.wrl",
-                        "Dunes",
-                        loadImage("resources/backgrounds/preview/b3.png")
-                ),
-                new LevelInfo(
-                        "resources/levels/Level4.wrl",
-                        "Dunes",
-                        loadImage("resources/backgrounds/preview/b4.png")
-                ),
-                new LevelInfo(
-                        "resources/levels/Level5.wrl",
-                        "Dunes",
-                        loadImage("resources/backgrounds/preview/b5.png")
-                ),
-                new LevelInfo(
-                        "resources/levels/Level6.wrl",
-                        "Dunes",
-                        loadImage("resources/backgrounds/preview/b6.png")
-                ),
-                new LevelInfo(
-                        "resources/levels/Vertical_Movement.wrl",
-                        "Dunes",
-                        loadImage("resources/backgrounds/preview/b7.png")
-                ),
-                new LevelInfo(
-                        "resources/levels/Basic_Platforms.wrl",
-                        "Aurora",
-                        loadImage("resources/backgrounds/preview/b1.png")
-                )
+                new LevelInfo("resources/levels/Level1.wrl", "Aurora", loadImage("resources/backgrounds/preview/b8.png")),
+                new LevelInfo("resources/levels/Level2.wrl", "Dunes", loadImage("resources/backgrounds/preview/b2.png")),
+                new LevelInfo("resources/levels/Level3.wrl", "Citadel", loadImage("resources/backgrounds/preview/b3.png")),
+                new LevelInfo("resources/levels/Level4.wrl", "Eclipse", loadImage("resources/backgrounds/preview/b4.png")),
+                new LevelInfo("resources/levels/Level5.wrl", "Horizon", loadImage("resources/backgrounds/preview/b5.png")),
+                new LevelInfo("resources/levels/Level6.wrl", "Outpost", loadImage("resources/backgrounds/preview/b6.png")),
+                new LevelInfo("resources/levels/Vertical_Movement.wrl", "Foundry", loadImage("resources/backgrounds/preview/b7.png")),
+                new LevelInfo("resources/levels/Basic_Platforms.wrl", "Nebula", loadImage("resources/backgrounds/preview/b1.png"))
         };
 
         SoundManager.load("move_ui", "resources/sounds/selecting_buttons2.wav");
         SoundManager.load("select_ui", "resources/sounds/select_button.wav");
-        SoundManager.load("game_over_effect" , "resources/sounds/game_over_effect.wav");
-
+        SoundManager.load("game_over_effect", "resources/sounds/game_over_effect.wav");
         SoundManager.load("robo_jump", "resources/sounds/jump.wav");
         SoundManager.load("robo_explode", "resources/sounds/robo_explosion.wav");
         SoundManager.load("robo_shoot", "resources/sounds/shoot.wav");
@@ -131,11 +97,9 @@ public class GameLoop extends Canvas implements Runnable {
         MusicPlayer.setVolume(BGMMUSIC);
         SoundManager.setVolume(SFXMUSIC);
 
-
-
-        gameStateHandler = new GameStateHandler(GameState.START_SCREEN_STATE) ;
-        levelSelectionContext = new LevelSelectionContext(gameStateHandler , levels , selectedLevel) ;
-        startScreenContext = new StartScreenContext(gameStateHandler) ;
+        gameStateHandler = new GameStateHandler(GameState.START_SCREEN_STATE);
+        levelSelectionContext = new LevelSelectionContext(gameStateHandler, levels, selectedLevel);
+        startScreenContext = new StartScreenContext(gameStateHandler);
         gameOverContext = new GameOverContext(gameStateHandler);
     }
 
@@ -144,61 +108,53 @@ public class GameLoop extends Canvas implements Runnable {
             return ImageIO.read(new File(path));
         } catch (Exception e) {
             System.out.println("Failed to load: " + path);
-            e.printStackTrace();
             return null;
         }
     }
 
     public synchronized void start() {
-        if(running) return ;
-        running = true ;
+        if (running) return;
+        running = true;
 
         while (!this.isDisplayable()) {
-            try {
-                Thread.sleep(10);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            try { Thread.sleep(10); } catch (InterruptedException e) { e.printStackTrace(); }
         }
 
         this.createBufferStrategy(3);
         this.requestFocus();
-        thread = new Thread(this) ;
-        thread.start() ;
+        thread = new Thread(this);
+        thread.start();
     }
 
     public synchronized void stop() {
-        if(!running) return ;
-        running = false ;
+        if (!running) return;
+        running = false;
         try {
-            thread.join() ;
+            thread.join();
         } catch (InterruptedException e) {
-            e.printStackTrace() ;
+            e.printStackTrace();
         }
-        // Try to close the window that contains this canvas
         java.awt.Window window = SwingUtilities.getWindowAncestor(this);
         if (window != null) {
             window.dispose();
         }
-        // Ensure JVM exits in case other threads are still alive
         System.exit(0);
     }
 
     @Override
     public void run() {
-        long lastTime = System.nanoTime() ;
-        double nsPerUpdate = 1_000_000_000.0/60.0 ;
-        double delta = 0 ;
-        GameState previousState = null ;
+        long lastTime = System.nanoTime();
+        double nsPerUpdate = 1_000_000_000.0 / 60.0;
+        double delta = 0;
+        GameState previousState = null;
 
-        while(running) {
+        while (running) {
+            long now = System.nanoTime();
+            delta += (now - lastTime) / nsPerUpdate;
+            lastTime = now;
 
-            long now = System.nanoTime() ;
-            delta += (now - lastTime) / nsPerUpdate ;
-            lastTime = now ;
-
-            while(delta >= 1) {
-                GameState gameState = gameStateHandler.getGameState() ;
+            while (delta >= 1) {
+                GameState gameState = gameStateHandler.getGameState();
 
                 if (gameState != previousState) {
                     switch (gameState) {
@@ -208,6 +164,10 @@ public class GameLoop extends Canvas implements Runnable {
                             break;
 
                         case GAME_PLAYING_STATE:
+                            // Reset PowerUps when moving from menu to game
+                            if (previousState == GameState.LEVEL_SELECTION_STATE) {
+                                powerUpSystem.reset();
+                            }
                             MusicPlayer.play("resources/sounds/gameplay_ost.wav");
                             break;
 
@@ -218,36 +178,28 @@ public class GameLoop extends Canvas implements Runnable {
                     previousState = gameState;
                 }
 
-                switch(gameState) {
-                    case START_SCREEN_STATE:
-                        updateStartScreen(startScreenContext) ;
-                        break ;
-                    case LEVEL_SELECTION_STATE :
-                        updateLevelSelection(levelSelectionContext);
-                        break;
-                    case GAME_PLAYING_STATE:
-                        updateGame(levelSelectionContext);
-                        break;
-                    case GAME_OVER_STATE:
-                        updateGameOver();
-                        break;
+                switch (gameState) {
+                    case START_SCREEN_STATE -> updateStartScreen(startScreenContext);
+                    case LEVEL_SELECTION_STATE -> updateLevelSelection(levelSelectionContext);
+                    case GAME_PLAYING_STATE -> updateGame(levelSelectionContext);
+                    case GAME_OVER_STATE -> updateGameOver();
                 }
-                delta-- ;
+                delta--;
             }
-            gameRenderer.render(startScreenContext , levelSelectionContext , gameOverContext , robot1 , robot2 , camera, powerUpSystem) ;
+            gameRenderer.render(startScreenContext, levelSelectionContext, gameOverContext, robot1, robot2, camera, powerUpSystem);
         }
-        stop() ;
+        stop();
     }
 
     private void updateStartScreen(StartScreenContext startScreenContext) {
-        playerController.control(startScreenContext , levelSelectionContext , gameOverContext) ;
-        if(startScreenContext.isStartPressed()) levelSelectionContext.getGameStateHandler().setGameState(GameState.LEVEL_SELECTION_STATE) ;
-        if(startScreenContext.isQuitPressed()) stop() ;
+        playerController.control(startScreenContext, levelSelectionContext, gameOverContext);
+        if (startScreenContext.isStartPressed()) gameStateHandler.setGameState(GameState.LEVEL_SELECTION_STATE);
+        if (startScreenContext.isQuitPressed()) stop();
     }
 
     private void updateGame(LevelSelectionContext levelSelectionContext) {
-        playerController.control(startScreenContext , levelSelectionContext , gameOverContext) ;
-        collisionHandler.handleCollisions(collisionResolver , levelSelectionContext.getLevel() , robot1 , robot2 , WIDTH , HEIGHT) ;
+        playerController.control(startScreenContext, levelSelectionContext, gameOverContext);
+        collisionHandler.handleCollisions(collisionResolver, levelSelectionContext.getLevel(), robot1, robot2, WIDTH, HEIGHT);
 
         robot1.updateAnimation();
         robot2.updateAnimation();
@@ -256,21 +208,24 @@ public class GameLoop extends Canvas implements Runnable {
         robotSystem.checkShootingRobots();
         robotSystem.checkAttacksRobots();
         robotSystem.checkRespawns();
-        powerUpSystem.update(levelSelectionContext.getLevel(), robot1, robot2, WIDTH);
+        
+        // Update power-ups using current level context
+        powerUpSystem.update(levelSelectionContext.getLevel(), robot1, robot2);
+        
         GameOverState result = robotSystem.checkWinCondition();
         if (result != GameOverState.NONE) {
             gameOverContext.setGameOverState(result);
             gameStateHandler.setGameState(GameState.GAME_OVER_STATE);
         }
-        physicsSystem.update(robot1 , robot2 , levelSelectionContext.getLevel()) ;
+        physicsSystem.update(robot1, robot2, levelSelectionContext.getLevel());
     }
 
     private void updateLevelSelection(LevelSelectionContext levelSelectionContext) {
-        playerController.control(startScreenContext , levelSelectionContext , gameOverContext) ;
+        playerController.control(startScreenContext, levelSelectionContext, gameOverContext);
     }
 
     private void updateGameOver() {
-        playerController.control(startScreenContext , levelSelectionContext , gameOverContext) ;
+        playerController.control(startScreenContext, levelSelectionContext, gameOverContext);
 
         if (gameOverContext.isReplayPressed()) {
             resetForReplay();
@@ -281,7 +236,6 @@ public class GameLoop extends Canvas implements Runnable {
             gameOverContext.resetActions();
             gameStateHandler.setGameState(GameState.LEVEL_SELECTION_STATE);
         } else if (gameOverContext.isQuitPressed()) {
-            // Mirror main menu quit behavior: exit immediately
             System.exit(0);
         }
     }
