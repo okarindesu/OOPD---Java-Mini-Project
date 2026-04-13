@@ -1,0 +1,17 @@
+# Introduces vertical platforms
+
+PARALLAX 0 0 0.01 /backgrounds/level3_bg/1.png
+PARALLAX 0 0 0.01 /backgrounds/level3_bg/2.png
+PARALLAX 0 0 0.01 /backgrounds/level3_bg/3.png
+PARALLAX 0 0 0.01 /backgrounds/level3_bg/4.png
+PARALLAX 0 0 0.01 /backgrounds/level3_bg/5.png
+
+# Requires chaining jumps
+
+STATIC 190 600 900 40 /backgrounds/level3_bg/1.png
+
+MOVING 100 500 100 15 60 0 120 0 /backgrounds/level3_bg/1.png
+MOVING 250 450 100 15 0 60 0 100 /backgrounds/level3_bg/1.png
+MOVING 400 400 100 15 60 0 150 0 /backgrounds/level3_bg/1.png
+MOVING 550 350 100 15 0 80 0 120 /backgrounds/level3_bg/1.png
+MOVING 700 300 100 15 80 0 200 0 /backgrounds/level3_bg/1.png
